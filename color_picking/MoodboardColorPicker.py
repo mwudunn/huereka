@@ -33,7 +33,6 @@ def compute_exp_dist_matrix(points):
     exp_dist = np.exp(dist_matrix) - 1.0
     return exp_dist
 
-
 def get_sampled_colors(ims, samples_per_image=1000):
     sampled_colors = []
 
@@ -52,6 +51,10 @@ def get_sampled_colors(ims, samples_per_image=1000):
     sampled_colors = sampled_colors.reshape((sampled_colors.shape[1], -1))
     return sampled_colors
 
+def get_cluster_centers(colors, labels, n_clusters):
+    centers = [np.mean(colors[labels == i], axis=0) for i in range(n_clusters)]
+    return centers
+
 def cluster_colors(colors, n_clusters):
     # using DBSCAN algorithm to find n clusters
     # dist_matrix = compute_exp_dist_matrix(colors)
@@ -61,9 +64,8 @@ def cluster_colors(colors, n_clusters):
     
     clustering.fit(dist_matrix)
     labels = clustering.labels_
-    centers = [np.mean(colors[labels == i], axis=0) for i in range(n_clusters)]
+    return labels
 
-    plot_colors(centers)
     # reconstructing compressed image with the found clusters
     
     # centers = ward.cluster_centers_
@@ -76,26 +78,35 @@ def plot_colors(colors):
     plt.bar(x_vals, height, color=colors)
     plt.show()
 
+def load_images(image_dir):
+    files = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
+    images = []
+    for file in files:
+        path = image_dir + "/" + file
+        im = Image.open(path)
+        images.append(im)
+    return images
+
+def compute_clusters(colors, num_clusters):
+    labels = cluster_colors(colors, num_clusters)
+    centers = get_cluster_centers(colors, labels, num_clusters)
+    return labels, centers
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--image_dir", type=str)
-    parser.add_argument("--num_clusters", type=int)
-    parser.add_argument("--samples_per_image", type=int)
+    parser.add_argument("--num_clusters", type=int, default=10)
+    parser.add_argument("--samples_per_image", type=int, default=1000)
     args = parser.parse_args()
 
-    mypath = args.image_dir
+    image_dir = args.image_dir
+    images = load_images(image_dir)
+
     num_clusters = args.num_clusters
     num_samples = args.samples_per_image
 
-    files = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-
-    images = []
-    for file in files:
-        path = mypath + "/" + file
-        im = Image.open(path)
-        images.append(im)
-
     colors = get_sampled_colors(images, num_samples)
-    cluster_colors(colors, num_clusters)
+    labels, centers = compute_clusters(colors, num_clusters)
+        
 if __name__ == "__main__":
     main()
