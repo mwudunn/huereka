@@ -8,10 +8,15 @@ import os
 import random
 import types
 
+import sys 
+sys.path.append("../../clustering")
+from MoodboardColorPicker import *
+
 
 BRUSH_MULT = 3
 SPRAY_PAINT_MULT = 5
 SPRAY_PAINT_N = 100
+
 
 COLORS = [
     '#000000', '#82817f', '#820300', '#868417', '#007e03', '#037e7b', '#040079',
@@ -26,18 +31,15 @@ FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64, 72, 96, 144, 288]
 MODES = [
     'selectpoly', 'selectrect',
     'eraser', 'fill',
-    'dropper', 'stamp',
     'pen', 'brush',
     'spray', 'text',
+    'dropper', 'stamp',
     'line', 'polyline',
     'rect', 'polygon',
     'ellipse', 'roundrect'
 ]
 
 CANVAS_DIMENSIONS = 600, 400
-
-STAMP_DIR = './stamps'
-STAMPS = [os.path.join(STAMP_DIR, f) for f in os.listdir(STAMP_DIR)]
 
 SELECTION_PEN = QPen(QColor(0xff, 0xff, 0xff), 1, Qt.DashLine)
 PREVIEW_PEN = QPen(QColor(0xff, 0xff, 0xff), 1, Qt.SolidLine)
@@ -85,7 +87,6 @@ class Canvas(QLabel):
 
     timer_event = None
 
-    current_stamp = None
 
     def initialize(self):
         self.background_color = QColor(self.secondary_color) if self.secondary_color else QColor(Qt.white)
@@ -279,14 +280,6 @@ class Canvas(QLabel):
 
     def eraser_mouseReleaseEvent(self, e):
         self.generic_mouseReleaseEvent(e)
-
-    # Stamp (pie) events
-
-    def stamp_mousePressEvent(self, e):
-        p = QPainter(self.pixmap())
-        stamp = self.current_stamp
-        p.drawPixmap(e.x() - stamp.width() // 2, e.y() - stamp.height() // 2, stamp)
-        self.update()
 
     # Pen events
 
@@ -670,13 +663,17 @@ class Canvas(QLabel):
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
+    def suggest_color(self, path, num_color):
+        images = load_images(path)
+        num_samples = 1000
+        colors = get_sampled_colors(images, num_samples)
+        labels, centers = compute_clusters(colors, num_color)
+        return centers
+
     def load_image(self, path):
         pixmap = QPixmap(path)
         self.canvas.setPixmap(pixmap)
     
-    
-
-
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setupUi(self)
@@ -704,8 +701,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.primaryButton.pressed.connect(lambda: self.choose_color(self.set_primary_color))
         self.secondaryButton.pressed.connect(lambda: self.choose_color(self.set_secondary_color))
 
+        self.load_image('input/test1.jpg')
+        suggested_colors = self.suggest_color('input', 10)
+        sug_colors_hex = [floatRGB2hex(c) for c in suggested_colors]
+        
         # Initialize button colours.
-        for n, hex in enumerate(COLORS, 1):
+        for n, hex in enumerate(sug_colors_hex, 1):
             btn = getattr(self, 'colorButton_%d' % n)
             btn.setStyleSheet('QPushButton { background-color: %s; }' % hex)
             btn.hex = hex  # For use in the event below
@@ -736,12 +737,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.canvas.primary_color_updated.connect(self.set_primary_color)
         self.canvas.secondary_color_updated.connect(self.set_secondary_color)
 
-        self.load_image('input/test1.jpg')
-        
-        # Setup the stamp state.
-        self.current_stamp_n = -1
-        self.next_stamp()
-        self.stampnextButton.pressed.connect(self.next_stamp)
 
         # Menu options
         self.actionNewImage.triggered.connect(self.canvas.initialize)
@@ -801,15 +796,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.canvas.set_secondary_color(hex)
         self.secondaryButton.setStyleSheet('QPushButton { background-color: %s; }' % hex)
 
-    def next_stamp(self):
-        self.current_stamp_n += 1
-        if self.current_stamp_n >= len(STAMPS):
-            self.current_stamp_n = 0
-
-        pixmap = QPixmap(STAMPS[self.current_stamp_n])
-        self.stampnextButton.setIcon(QIcon(pixmap))
-
-        self.canvas.current_stamp = pixmap
 
     def copy_to_clipboard(self):
         clipboard = QApplication.clipboard()
