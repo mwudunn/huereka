@@ -1,0 +1,6 @@
+data_params:
+  images_path: "C:/Users/Dalton/Google\ Drive/cs294-164/Huereka/art"
+  img_size: 32
+  crop_pad_px: 10
+  batch_size: 4
+
