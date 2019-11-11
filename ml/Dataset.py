@@ -2,17 +2,22 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-import glob
 import yaml
+import sqlite3
+import pandas as pd
+import requests
 
 NUM_CHANNELS = 3
+STYLES = {
+    'watercolor': 'media_watercolor',
+    'vectorart': 'media_vectorart'
+}
 
 class ColorData:
     def __init__(self, config):
         self.data_params = config['data_params']
 
-    def _decode_img(self, img_path):
-        img = tf.io.read_file(img_path)
+    def _decode_img(self, img):
         img = tf.image.decode_image(img)
         img = tf.image.convert_image_dtype(img, tf.float32)
 
@@ -31,10 +36,18 @@ class ColorData:
 
         return img
 
+    def _generator(self):
+        db = sqlite3.connect(self.data_params['database'])
+        query = """SELECT m.src FROM modules AS m, automatic_labels AS a
+                   WHERE m.mid == a.mid AND a.{0} == 'positive'""".format(self.style)
+        df = pd.read_sql(query, db)
+        for url in df['src']:
+            yield requests.get(url).content
 
-    def get_dataset(self):
-        images_glob = self.data_params['images_path'] + '/*'
-        dataset = tf.data.Dataset.list_files(images_glob)
+
+    def get_dataset(self, style):
+        self.style = STYLES[style]
+        dataset = tf.data.Dataset.from_generator(self._generator, tf.string)
         dataset = dataset.map(self._decode_img)
         dataset = dataset.map(self._random_crop_flip)
 
@@ -42,7 +55,7 @@ class ColorData:
         dataset = dataset.shuffle(100)
         dataset = dataset.batch(batch_size)
         dataset = dataset.repeat()
-        dataset = dataset.prefetch(5)
+        dataset = dataset.prefetch(8)
 
         return dataset
 
@@ -59,7 +72,7 @@ def main():
     tf.compat.v1.enable_eager_execution()
 
     color_data = ColorData(config)
-    dataset = color_data.get_dataset()
+    dataset = color_data.get_dataset(config['data_params']['style'])
 
     for batch in dataset.take(1):
         for img in batch:
@@ -67,8 +80,6 @@ def main():
             plt.axis('off')
             plt.imshow(img.numpy())
             plt.show()
-
-
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 data_params:
-  images_path: "C:/Users/Dalton/Google\ Drive/cs294-164/Huereka/art"
-  img_size: 32
-  crop_pad_px: 10
+  database: "C:/Users/Dalton/Google\ Drive/cs294-164/Huereka/bam.sqlite"
+  img_size: 128
+  crop_pad_px: 32
   batch_size: 4
+  style: 'watercolor'
 
