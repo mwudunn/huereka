@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 def get_image_colors(im):
 	numpy_im = np.array(im)
-	colors = resize(numpy_im, (32, 32), anti_aliasing=True)
+	# colors = resize(numpy_im, (32, 32), anti_aliasing=True)
 	if colors.dtype == np.uint8:
 		colors = colors.astype(np.float64) / 255
 	return colors
