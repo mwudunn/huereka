@@ -10,6 +10,8 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from colormap import rgb2hex
+import math 
 
 def cluster_colors_kmeans(sampled_colors, n_clusters):
 
@@ -78,8 +80,17 @@ def plot_colors(colors):
     plt.bar(x_vals, height, color=colors)
     plt.show()
 
+def floatRGB2hex(color):
+    """
+    Convert the input color (RGB) to hex
+    """
+    R = min(256, math.floor(color[0] * 256)) 
+    G = min(256, math.floor(color[1] * 256)) 
+    B = min(256, math.floor(color[2] * 256)) 
+    return rgb2hex(R, G, B)
+
 def load_images(image_dir):
-    files = [f for f in listdir(image_dir) if isfile(join(image_dir, f))]
+    files = [f for f in listdir(image_dir) if (isfile(join(image_dir, f)) and f != '.DS_Store')]
     images = []
     for file in files:
         path = image_dir + "/" + file
