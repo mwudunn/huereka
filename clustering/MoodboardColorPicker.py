@@ -107,6 +107,7 @@ def main():
 
     colors = get_sampled_colors(images, num_samples)
     labels, centers = compute_clusters(colors, num_clusters)
+    return labels, centers
         
 if __name__ == "__main__":
     main()
