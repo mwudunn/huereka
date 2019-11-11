@@ -16,14 +16,8 @@ from MoodboardColorPicker import *
 BRUSH_MULT = 3
 SPRAY_PAINT_MULT = 5
 SPRAY_PAINT_N = 100
-
-
 COLORS = [
-    '#000000', '#82817f', '#820300', '#868417', '#007e03', '#037e7b', '#040079',
-    '#81067a', '#7f7e45', '#05403c', '#0a7cf6', '#093c7e', '#7e07f9', '#7c4002',
-
-    '#ffffff', '#c1c1c1', '#f70406', '#fffd00', '#08fb01', '#0bf8ee', '#0000fa',
-    '#b92fc2', '#fffc91', '#00fd83', '#87f9f9', '#8481c4', '#dc137d', '#fb803c',
+    '#000000', '#82817f', '#820300', '#868417', '#007e03', '#037e7b', '#040079'
 ]
 
 FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64, 72, 96, 144, 288]
@@ -58,7 +52,6 @@ def build_font(config):
     font.setItalic(config['italic'])
     font.setUnderline(config['underline'])
     return font
-
 
 class Canvas(QLabel):
     mode = 'rectangle'
@@ -99,7 +92,6 @@ class Canvas(QLabel):
     def reset(self):
         # Create the pixmap for display.
         self.setPixmap(QPixmap(*CANVAS_DIMENSIONS))
-
         # Clear the canvas.
         self.pixmap().fill(self.background_color)
 
@@ -152,7 +144,6 @@ class Canvas(QLabel):
             timer_event(final=True)
 
     # Mouse events.
-
     def mousePressEvent(self, e):
         fn = getattr(self, "%s_mousePressEvent" % self.mode, None)
         if fn:
@@ -664,9 +655,9 @@ class Canvas(QLabel):
 class MainWindow(QMainWindow, Ui_MainWindow):
 
     def suggest_color(self, path, num_color):
-        images = load_images(path)
+        image_lst = load_single_image(path)
         num_samples = 1000
-        colors = get_sampled_colors(images, num_samples)
+        colors = get_sampled_colors(image_lst, num_samples)
         labels, centers = compute_clusters(colors, num_color)
         return centers
 
@@ -701,12 +692,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.primaryButton.pressed.connect(lambda: self.choose_color(self.set_primary_color))
         self.secondaryButton.pressed.connect(lambda: self.choose_color(self.set_secondary_color))
 
-        self.load_image('input/test1.jpg')
-        suggested_colors = self.suggest_color('input', 10)
-        sug_colors_hex = [floatRGB2hex(c) for c in suggested_colors]
+        #self.load_image('input/test1.jpg')
+        #suggested_colors = self.suggest_color('input', 10)
+        #sug_colors_hex = [floatRGB2hex(c) for c in suggested_colors]
         
         # Initialize button colours.
-        for n, hex in enumerate(sug_colors_hex, 1):
+        for n, hex in enumerate(COLORS, 1):
             btn = getattr(self, 'colorButton_%d' % n)
             btn.setStyleSheet('QPushButton { background-color: %s; }' % hex)
             btn.hex = hex  # For use in the event below
@@ -841,7 +832,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     QRect(QPoint(woff, 0), QPoint(pixmap.width()-woff, ch))
                 )
 
+            suggested_colors = self.suggest_color(path, 10)
+            sug_colors_hex = [floatRGB2hex(c) for c in suggested_colors]
+            
+            # Initialize button colours.
+            for n, hex in enumerate(sug_colors_hex, 1):
+                btn = getattr(self, 'colorButton_%d' % n)
+                btn.setStyleSheet('QPushButton { background-color: %s; }' % hex)
+                btn.hex = hex  # For use in the event below
+
+                def patch_mousePressEvent(self_, e):
+                    if e.button() == Qt.LeftButton:
+                        self.set_primary_color(self_.hex)
+
+                    elif e.button() == Qt.RightButton:
+                        self.set_secondary_color(self_.hex)
+
+                btn.mousePressEvent = types.MethodType(patch_mousePressEvent, btn)
             self.canvas.setPixmap(pixmap)
+
+           
 
 
     def save_file(self):

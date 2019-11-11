@@ -98,6 +98,12 @@ def load_images(image_dir):
         images.append(im)
     return images
 
+def load_single_image(image_path):
+    lst = []
+    im = Image.open(image_path)
+    lst.append(im)
+    return lst
+
 def compute_clusters(colors, num_clusters):
     labels = cluster_colors(colors, num_clusters)
     centers = get_cluster_centers(colors, labels, num_clusters)
