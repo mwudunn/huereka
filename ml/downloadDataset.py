@@ -19,6 +19,3 @@ for url, mid in zip(df['src'], df['mid']):
     filename = location + str(mid) + '.jpg'
     with open(filename, 'wb+') as f:
         f.write(img)
-
-
-    raise ValueError

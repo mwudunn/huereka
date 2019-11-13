@@ -21,16 +21,16 @@ def get_cluster_labels(image, num_clusters, rescale_size):
     colors = colors.reshape((colors.shape[0] * colors.shape[1], 3))
     cluster_labels = cluster_colors(colors, num_clusters)
     cluster_labels = cluster_labels.reshape((original_shape[0], original_shape[1]))
+    colors = colors.reshape((original_shape[0], original_shape[1], 3))
     return cluster_labels, colors
 
-def remove_colors(image, labels, to_remove):
+def remove_colors(image, labels, to_remove, replacement_val):
     num = np.max(labels) + 1
-    new_image = image.copy().reshape((-1, int(np.sqrt(image.shape[0])), 3))
+    new_image = image.copy()
     labels_sorted = np.asarray(list(to_remove) + [x for x in np.arange(num) if x not in to_remove])
     labels_map = np.argsort(labels_sorted)
-    unique, counts = np.unique(labels, return_counts=True)
     new_labels = labels_map[labels]
-    new_image[new_labels < len(to_remove)] = 0.
+    new_image[new_labels < len(to_remove)] = replacement_val
     return new_image
 
 def main():
