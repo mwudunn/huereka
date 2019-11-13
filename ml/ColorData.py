@@ -6,6 +6,10 @@ import yaml
 import sqlite3
 import pandas as pd
 import requests
+import sys
+
+sys.path.append('../clustering')
+import ColorRemover
 
 NUM_CHANNELS = 3
 STYLES = {
@@ -16,6 +20,7 @@ STYLES = {
 class ColorData:
     def __init__(self, config):
         self.data_params = config['data_params']
+        self.model_params = config['model_params']
 
     def _decode_img(self, img):
         img = tf.image.decode_image(img)
@@ -52,13 +57,24 @@ class ColorData:
         dataset = dataset.map(self._random_crop_flip)
 
         batch_size = self.data_params['batch_size']
-        dataset = dataset.shuffle(100)
+        # dataset = dataset.shuffle(100)
         dataset = dataset.batch(batch_size)
         dataset = dataset.repeat()
-        dataset = dataset.prefetch(8)
+        # dataset = dataset.prefetch(8)
 
         return dataset
 
+
+    def remove_colors(self, batch):
+        new_img, removed_colors = [], []
+        for img in batch:
+            labels, img = ColorRemover.get_cluster_labels(img, self.data_params['num_clusters'], 0)
+            to_remove = np.random.choice(np.arange(self.data_params['num_clusters']), 
+                self.model_params['num_colors'], replace=False)
+            img = ColorRemover.remove_colors(img, labels, to_remove)
+            new_img.append(img)
+            removed_colors.append(labels)
+        return np.array(new_img, dtype=np.float32), np.array(removed_colors, dtype=np.float32)
 
 
 def main():
@@ -75,11 +91,10 @@ def main():
     dataset = color_data.get_dataset(config['data_params']['style'])
 
     for batch in dataset.take(1):
-        for img in batch:
-            plt.figure()
-            plt.axis('off')
-            plt.imshow(img.numpy())
-            plt.show()
+        img, labels = color_data.remove_colors(batch)
+        for img, labels in zip(img, labels):
+            print(img)
+            print(labels)
 
 
 if __name__ == '__main__':

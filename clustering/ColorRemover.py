@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 
 
 def get_image_colors(im, rescale_size):
-    numpy_im = np.array(im)
-    colors = resize(numpy_im, (rescale_size, rescale_size), anti_aliasing=True)
+    colors = np.array(im)
+    if rescale_size:
+        colors = resize(colors, (rescale_size, rescale_size), anti_aliasing=True)
     if colors.dtype == np.uint8:
         colors = colors.astype(np.float64) / 255
     return colors
@@ -23,11 +24,12 @@ def get_cluster_labels(image, num_clusters, rescale_size):
     return cluster_labels, colors
 
 def remove_colors(image, labels, to_remove):
-    num = np.max(labels)
+    num = np.max(labels) + 1
     new_image = image.copy().reshape((-1, int(np.sqrt(image.shape[0])), 3))
-    labels_sorted = np.asarray(to_remove + [x for x in np.arange(num) + 1 if x not in to_remove])
-    labels_map = np.argsort(labels_sorted - 1)
-    new_labels = labels_map[labels - 1]
+    labels_sorted = np.asarray(list(to_remove) + [x for x in np.arange(num) if x not in to_remove])
+    labels_map = np.argsort(labels_sorted)
+    unique, counts = np.unique(labels, return_counts=True)
+    new_labels = labels_map[labels]
     new_image[new_labels < len(to_remove)] = 0.
     return new_image
 
