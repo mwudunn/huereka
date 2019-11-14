@@ -20,7 +20,7 @@ def main():
 	tf.compat.v1.enable_eager_execution()
 
 	color_data = ColorData.ColorData(config)
-	dataset = color_data.get_dataset(config['data_params']['style'])
+	dataset = color_data.get_dataset()
 
 
 

@@ -50,10 +50,10 @@ class ColorData:
         dataset = dataset.map(self._random_crop_flip)
 
         batch_size = self.data_params['batch_size']
-        # dataset = dataset.shuffle(100)
+        dataset = dataset.shuffle(100)
         dataset = dataset.batch(batch_size)
         dataset = dataset.repeat()
-        # dataset = dataset.prefetch(8)
+        dataset = dataset.prefetch(8)
 
         return dataset
 
@@ -90,8 +90,13 @@ def main():
     dataset = color_data.get_dataset()
 
     for batch in dataset.take(1):
+        i=0
         img, colors = color_data.remove_colors(batch, replacement_val=1.)
         for img, colors in zip(img, colors):
+            plt.figure()
+            plt.axis('off')
+            plt.imshow(batch[i])
+            i += 1
             print(colors)
             plt.figure()
             plt.axis('off')

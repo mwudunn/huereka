@@ -1,9 +1,9 @@
 data_params:
-  img_folder: "C:/Users/Dalton/Google\ Drive/cs294-164/code/ml/test"
+  img_folder: "C:/Users/Dalton/Google\ Drive/cs294-164/code/ml/media_oilpaint"
   img_size: 64
   crop_pad_px: 32
   batch_size: 4
-  num_clusters: 5
+  num_clusters: 7
 
 model_params:
   num_colors: 3

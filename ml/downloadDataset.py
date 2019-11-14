@@ -4,7 +4,7 @@ import pandas as pd
 import os
 
 database = '../../Huereka/bam.sqlite'
-style = 'media_watercolor'
+style = 'media_oilpaint'
 location = './' + style + '/'
 
 if not os.path.exists(location):
