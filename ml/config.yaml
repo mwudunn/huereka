@@ -3,10 +3,10 @@ data_params:
   img_size: 64
   crop_pad_px: 32
   batch_size: 8
-  num_clusters: 7
+  num_clusters: 4
 
 model_params:
-  num_colors: 3
+  num_colors: 1
   channels: [8, 16, 32, 64, 128]
   dense: [1024, 1024]
   size: [3, 3]
