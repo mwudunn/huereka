@@ -2,7 +2,7 @@ data_params:
   img_folder: "C:/Users/Dalton/Google\ Drive/cs294-164/code/ml/media_oilpaint"
   img_size: 64
   crop_pad_px: 32
-  batch_size: 4
+  batch_size: 8
   num_clusters: 7
 
 model_params:
@@ -15,6 +15,6 @@ model_params:
   pool_strides: [2, 2]
 
 training_params:
-  weight_decay: 0.01
-  learning_rate: [1e-3, 1e-4, 1e-5]
+  weight_decay: 1e-5
+  lr: [1e-3, 1e-4, 1e-5]
   steps: [5000, 5000, 5000]

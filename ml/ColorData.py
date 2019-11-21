@@ -42,7 +42,7 @@ class ColorData:
 
         return img
 
-    def get_dataset(self):
+    def get_dataset(self, test_size):
         dataset = tf.data.Dataset.list_files(self.data_params['img_folder'] + '/*')
         dataset = dataset.map(self._decode_img)
         dataset = dataset.filter(self._reject_blank)
@@ -50,17 +50,19 @@ class ColorData:
         dataset = dataset.map(self._random_crop_flip)
 
         batch_size = self.data_params['batch_size']
-        dataset = dataset.shuffle(100)
-        dataset = dataset.batch(batch_size)
-        dataset = dataset.repeat()
-        dataset = dataset.prefetch(8)
+        data_test = dataset.take(test_size).repeat().shuffle(100)
+        data_test = data_test.batch(batch_size).prefetch(8)
+        data_train = dataset.skip(test_size).repeat().shuffle(100)
+        data_train = data_train.batch(batch_size).prefetch(8)
 
-        return dataset
-
+        return data_train, data_test
 
     def remove_colors(self, batch, replacement_val):
         # return two batches of new images and lists of removed colors
         # also gaussian blurs the image
+
+        # https://scikit-image.org/docs/stable/api/skimage.measure.html#skimage.measure.label
+        # use this to only remove one connected component of each?
         new_img, removed_colors = [], []
         n_clusters = self.data_params['num_clusters']
         for img in batch:
@@ -87,9 +89,16 @@ def main():
     tf.compat.v1.enable_eager_execution()
 
     color_data = ColorData(config)
-    dataset = color_data.get_dataset()
+    data_train, data_test = color_data.get_dataset(1000)
 
-    for batch in dataset.take(1):
+    # for weeding out images that break when decoded
+    # for x in data_train:
+    #     print(x.numpy())
+    #     img = tf.io.read_file(x[0])
+    #     img = tf.image.decode_image(img)
+    #     img.numpy()
+
+    for batch in data_train:
         i=0
         img, colors = color_data.remove_colors(batch, replacement_val=1.)
         for img, colors in zip(img, colors):

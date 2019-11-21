@@ -32,15 +32,15 @@ class ColorSuggestModel:
         labels = ColorOps.sRGB_to_XYZ(labels)
         labels = ColorOps.XYZ_to_LAB(labels)
         diff = ColorOps.deltaE_2000(colors, labels)
-        loss = tf.reduce_sum(tf.square(diff))
+        loss = tf.reduce_mean(tf.square(diff))
 
         lr = tf.Variable(1e-3,trainable=False,name='lr')
         lrPH = tf.placeholder(tf.float32,(),name='lrPH')
         lr_assign = tf.assign(lr,lrPH)
-        global_step = tf.train.create_global_step()
+        global_step = tf.compat.v1.train.get_or_create_global_step()
 
         decay = float(self.training_params['weight_decay'])
         optimizer = tf.contrib.opt.AdamWOptimizer(decay, lr)
         opt = optimizer.minimize(loss, global_step=global_step)
 
-        return dict(opt=opt, lr_assign=lr_assign, lrPH=lrPH, loss=loss)
+        return dict(opt=opt, lr_assign=lr_assign, lrPH=lrPH, loss=loss, global_step=global_step)
