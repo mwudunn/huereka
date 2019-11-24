@@ -1,15 +1,20 @@
 data_params:
-  database: "C:/Users/Dalton/Google\ Drive/cs294-164/Huereka/bam.sqlite"
-  img_size: 128
+  img_folder: "C:/Users/Dalton/Google\ Drive/cs294-164/code/ml/media_oilpaint"
+  img_size: 64
   crop_pad_px: 32
-  batch_size: 4
-  style: 'watercolor'
+  batch_size: 8
+  num_clusters: 4
 
 model_params:
-  num_colors: 4
+  num_colors: 1
   channels: [8, 16, 32, 64, 128]
   dense: [1024, 1024]
   size: [3, 3]
   stride: [1, 1]
   pool_size: [2, 2]
   pool_strides: [2, 2]
+
+training_params:
+  weight_decay: 0
+  lr: [1e-4, 1e-5, 1e-6]
+  steps: [5000, 5000, 5000]
