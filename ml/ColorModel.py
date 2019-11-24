@@ -22,7 +22,8 @@ class ColorSuggestModel:
             x = tf.layers.dense(x, self.model_params['num_colors'] * 3)
         out = tf.reshape(x, (-1,self.model_params['num_colors'],3))
 
-        out = tf.clip_by_value(out, 0., 1.)
+        # out = tf.clip_by_value(out, 0., 1.)
+        out = tf.sigmoid(out)
 
         return out
 

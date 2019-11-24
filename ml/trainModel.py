@@ -66,13 +66,14 @@ def main():
                         batch = sess.run(data_test)
                         img, colors = color_data.remove_colors(batch, replacement_val=1.)
                         feed_dict = { imagePH:img, labelsPH:colors }
-                        loss = sess.run(opt['loss'], feed_dict=feed_dict)
+                        colors_out, loss = sess.run([model_out, opt['loss']], feed_dict=feed_dict)
 
                         summary, step = sess.run([write_op, opt['global_step']], { loss_var:loss })
                         test_writer.add_summary(summary, step)
                         test_writer.flush()
 
                         print('{} {} {}'.format(step, train_loss, loss))
+                        print('    {}'.format(colors_out[0][0]))
 
         except KeyboardInterrupt:
             print('Stopping early due to keyboard interrupt')

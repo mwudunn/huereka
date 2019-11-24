@@ -77,6 +77,9 @@ class ColorData:
             removed_colors.append(removed)
         return np.array(new_img, dtype=np.float32), np.array(removed_colors, dtype=np.float32)
 
+    def _gaussian_blur(self, batch):
+        pass
+
 
 def main():
     parser = argparse.ArgumentParser(description='Art Color Dataset')
