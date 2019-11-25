@@ -33,8 +33,8 @@ class ColorElement:
 
 class ColorRegion:
     def __init__(self):
-        self.blob1 = ColorElement((50, 50), 20, (100.0, 10.0, 10.0)) 
-        self.blob2 = ColorElement((50, 170), 20, (1.0, 1.0, 1.0))
+        self.blob1 = ColorElement((50, 50), 20, (255,255,255)) 
+        self.blob2 = ColorElement((50, 170), 20, (0,0,0))
         self.blob3 = ColorElement((150, 75), 20, (1.0, 1.0, 1.0))
         self.blob_lst = [self.blob1, self.blob2]
         self.bbox = self.calcBBox()
@@ -64,7 +64,7 @@ class ColorRegion:
                     distLst = [np.linalg.norm(currPt - blob_center) for blob_center in blob_centers]
                     colorLst = [np.array(blob.color) for blob in self.blob_lst]
                     if np.sum(distLst) < threshold:
-                        color_res = self.calcColor(distLst, colorLst)
+                        color_res = self.calcColorAdvanced(distLst, colorLst)
                         painter.setPen(QtGui.QColor(color_res[0], color_res[1], color_res[0]))
                         painter.drawPoint(x, y)
 
@@ -76,6 +76,27 @@ class ColorRegion:
             res_color += colorList[i] * distList[i]
         res_color /= np.sum(distList)
         return res_color
+
+    def calcColorAdvanced(self, distList, colorList):
+        b = 100
+        assert len(distList) == len(colorList)
+        res_color = np.array([0.0, 0.0, 0.0])
+        color = np.array([0.0, 0.0, 0.0])
+        influence_sum = 0
+        for i in range(len(distList)):
+            d = distList[i]
+            if d <= b:
+                influence = 1 - 4 * pow(d, 6) / (9 * pow(b, 6)) + 17 * pow(d, 4) / (9 * pow(b, 4)) - 22 * pow(d, 2) / (9 * pow(b,2))
+            else:
+                influence = 0
+            color += influence * colorList[i]
+            influence_sum += influence
+
+        if influence_sum > 0.4: 
+            res_color = color / influence_sum
+        return res_color
+
+
 
     def calcBBox(self):
         xCoords = [b.x - b.radius for b in self.blob_lst] + [b.x + b.radius for b in self.blob_lst]
