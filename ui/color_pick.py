@@ -33,40 +33,25 @@ class ColorElement:
 
 class ColorRegion:
     def __init__(self):
-        self.blob1 = ColorElement((50, 50), 20, (255,255,255)) 
-        self.blob2 = ColorElement((50, 170), 20, (0,0,0))
-        self.blob3 = ColorElement((150, 75), 20, (1.0, 1.0, 1.0))
-        self.blob_lst = [self.blob1, self.blob2]
+        self.blob1 = ColorElement((45, 45), 10, (255,255,255)) 
+        self.blob2 = ColorElement((45, 95), 10, (245, 173, 66))
+        self.blob3 = ColorElement((75, 30), 20, (1.0, 1.0, 1.0))
+        self.blob_lst = [self.blob1, self.blob2, self.blob3]
         self.bbox = self.calcBBox()
 
     def drawRegion(self, painter):
-        #self.blob1.drawColor(painter)
-        #self.blob2.drawColor(painter)
         self.bbox = self.calcBBox()
-        print(self.bbox)
         blob_centers = [np.array([c.x, c.y]) for c in self.blob_lst] #ASSUME 2 Centers for now 
 
-        assert len(blob_centers) == 2
-        if np.linalg.norm(blob_centers[0] - blob_centers[1]) >= 100:
-            self.blob_lst[0].drawColor(painter)
-            self.blob_lst[1].drawColor(painter)
-
-        else:
-            threshold = 0
-            for i in range(len(blob_centers) - 1):
-                threshold += np.linalg.norm(blob_centers[i] - blob_centers[i + 1])
-            #threshold += np.linalg.norm(blob_centers[len(blob_centers) - 1] - blob_centers[0])
-            threshold *= 1.1
-
-            for x in range(self.bbox[0], self.bbox[2]):
-                for y in range(self.bbox[1], self.bbox[3]):
-                    currPt = np.array([x, y])
-                    distLst = [np.linalg.norm(currPt - blob_center) for blob_center in blob_centers]
-                    colorLst = [np.array(blob.color) for blob in self.blob_lst]
-                    if np.sum(distLst) < threshold:
-                        color_res = self.calcColorAdvanced(distLst, colorLst)
-                        painter.setPen(QtGui.QColor(color_res[0], color_res[1], color_res[0]))
-                        painter.drawPoint(x, y)
+        for x in range(self.bbox[0], self.bbox[2]):
+            for y in range(self.bbox[1], self.bbox[3]):
+                currPt = np.array([x, y])
+                distLst = [np.linalg.norm(currPt - blob_center) for blob_center in blob_centers]
+                colorLst = [np.array(blob.color) for blob in self.blob_lst]
+                color_res, toRender = self.calcColorAdvanced(distLst, colorLst)
+                if toRender:
+                    painter.setPen(QtGui.QColor(color_res[0], color_res[1], color_res[0]))
+                    painter.drawPoint(x, y)
 
 
     def calcColor(self, distList, colorList):
@@ -78,7 +63,7 @@ class ColorRegion:
         return res_color
 
     def calcColorAdvanced(self, distList, colorList):
-        b = 100
+        b = 40
         assert len(distList) == len(colorList)
         res_color = np.array([0.0, 0.0, 0.0])
         color = np.array([0.0, 0.0, 0.0])
@@ -92,28 +77,28 @@ class ColorRegion:
             color += influence * colorList[i]
             influence_sum += influence
 
+        render = False 
         if influence_sum > 0.4: 
             res_color = color / influence_sum
-        return res_color
-
+            render = True 
+        return res_color, render 
 
 
     def calcBBox(self):
         xCoords = [b.x - b.radius for b in self.blob_lst] + [b.x + b.radius for b in self.blob_lst]
         yCoords = [b.y - b.radius for b in self.blob_lst] + [b.y + b.radius for b in self.blob_lst]
-        minX = int(min(xCoords)* 0.8)
-        minY = int(min(yCoords)* 0.8)
-        maxX = int(max(xCoords) * 1.2)
-        maxY = int(max(yCoords) * 1.2)
+        minX = int(min(xCoords)* 0.5)
+        minY = int(min(yCoords)* 0.5)
+        maxX = int(max(xCoords) * 1.5)
+        maxY = int(max(yCoords) * 1.5)
         return (minX, minY, maxX, maxY)
 
 
 class MyWidget(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
-        self.setGeometry(30,30,600,400)
+        self.setGeometry(30,30,300,200)
         self.region = ColorRegion()
-        print(self.region.bbox)
         self.show()
 
 
