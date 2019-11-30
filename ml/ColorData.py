@@ -11,6 +11,19 @@ import ColorRemover
 
 NUM_CHANNELS = 3
 
+def displayOne(batch, img, colors, i=0):
+    plt.subplot(1, 3, 1)
+    plt.axis('off')
+    plt.imshow(batch[i])
+    plt.subplot(1, 3, 2)
+    plt.axis('off')
+    plt.imshow(img[i])
+    plt.subplot(1, 3, 3)
+    plt.axis('off')
+    x_vals = range(0, len(colors[i]))
+    plt.bar(x_vals, 10, color=colors[i])
+    plt.show()
+
 class ColorData:
     def __init__(self, config):
         self.data_params = config['data_params']
@@ -43,7 +56,7 @@ class ColorData:
         return img
 
     def get_dataset(self, test_size):
-        dataset = tf.data.Dataset.list_files(self.data_params['img_folder'] + '/*')
+        dataset = tf.data.Dataset.list_files(self.data_params['img_folder'] + '/*', shuffle=False)
         dataset = dataset.map(self._decode_img)
         dataset = dataset.filter(self._reject_blank)
         dataset = dataset.map(self._resize)
@@ -92,7 +105,7 @@ def main():
     tf.compat.v1.enable_eager_execution()
 
     color_data = ColorData(config)
-    data_train, data_test = color_data.get_dataset(1000)
+    data_train, data_test = color_data.get_dataset(8)
 
     # for weeding out images that break when decoded
     # for x in data_train:
@@ -101,24 +114,10 @@ def main():
     #     img = tf.image.decode_image(img)
     #     img.numpy()
 
-    for batch in data_train:
-        i=0
+    for batch in data_test:
         img, colors = color_data.remove_colors(batch, replacement_val=1.)
-        for img, colors in zip(img, colors):
-            plt.figure()
-            plt.axis('off')
-            plt.imshow(batch[i])
-            i += 1
-            print(colors)
-            plt.figure()
-            plt.axis('off')
-            plt.imshow(img)
-            plt.figure()
-            plt.axis('off')
-            x_vals = range(0, len(colors))
-            height = 10
-            plt.bar(x_vals, height, color=colors)
-            plt.show()
+        for i in range(len(batch)):
+            displayOne(batch, img, colors, i)
             
 
 if __name__ == '__main__':

@@ -28,12 +28,15 @@ class ColorSuggestModel:
         return out
 
     def buildOpt(self, model, labels):
-        colors = ColorOps.sRGB_to_XYZ(model)
-        colors = ColorOps.XYZ_to_LAB(colors)
-        labels = ColorOps.sRGB_to_XYZ(labels)
-        labels = ColorOps.XYZ_to_LAB(labels)
-        diff = ColorOps.deltaE_2000(colors, labels)
-        loss = tf.reduce_mean(tf.square(diff))
+        loss = tf.reduce_mean(tf.square(model - labels))
+
+
+        # colors = ColorOps.sRGB_to_XYZ(model)
+        # colors = ColorOps.XYZ_to_LAB(colors)
+        # labels = ColorOps.sRGB_to_XYZ(labels)
+        # labels = ColorOps.XYZ_to_LAB(labels)
+        # diff = ColorOps.deltaE_2000(colors, labels)
+        # loss = tf.reduce_mean(tf.square(diff))
 
         lr = tf.Variable(1e-3,trainable=False,name='lr')
         lrPH = tf.placeholder(tf.float32,(),name='lrPH')
