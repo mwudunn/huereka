@@ -54,7 +54,7 @@ class ColorSuggestModel:
 class ColorSuggestModelSeparate(ColorSuggestModel):
     def buildModel(self, image):
         channels = [self.buildChannel(image, i) for i in range(NUM_CHANNELS)]
-        out = tf.stack(out, axis=2)
+        out = tf.stack(channels, axis=2)
 
         return out
 
