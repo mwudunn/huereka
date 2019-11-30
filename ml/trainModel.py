@@ -23,7 +23,7 @@ def main():
 
     # prepare data in
     color_data = ColorData.ColorData(config)
-    data_train, data_test = color_data.get_dataset(1000)
+    data_train, data_test = color_data.get_dataset(670)
     data_train = data_train.make_one_shot_iterator().get_next()
     data_test = data_test.make_one_shot_iterator().get_next()
 
@@ -73,7 +73,7 @@ def main():
                         test_writer.flush()
 
                         print('{} {} {}'.format(step, train_loss, loss))
-                        print('    {}'.format(colors_out[0][0]))
+                        print('    {}'.format([int(x * 255) for x in colors_out[0][0]]))
 
         except KeyboardInterrupt:
             print('Stopping early due to keyboard interrupt')
