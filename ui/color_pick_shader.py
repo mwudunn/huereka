@@ -56,7 +56,7 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
         vBlobRadiusStr = 'varying float vBlobRadius[{}];'.format(blobArrLen)
 
         vertex = """
-        #version 150
+        #version 130
         in vec4 position;
         uniform float uW;
         uniform float uH;
@@ -85,7 +85,7 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
             return
 
         fragment = """
-        #version 150
+        #version 130
         out vec4 outputColor;
         precision highp float;
         varying float vW;
