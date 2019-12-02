@@ -72,5 +72,24 @@ class ColorSuggestModelSeparate(ColorSuggestModel):
 
         # out = tf.clip_by_value(out, 0., 1.)
         out = tf.sigmoid(out)
-
         return out
+
+class ClusterSuggestModel:
+    def __init__(self, config):
+        self.model_params = config['model_params']
+        self.training_params = config['training_params']
+        
+    def build_model(self, input_placeholder):
+        x = input_placeholder
+        with tf.variable_scope("fcModel"):
+            for dense_size in self.model_params["dense_size"]:
+                x = tf.layers.dense(x, dense_size, activation=tf.tanh)
+            x = tf.layers.dense(x, self.model_params['num_colors'] * 3)
+
+        out = tf.reshape(x, (-1, self.model_params['num_colors'], 3))
+        return out
+
+    def define_train_op(self, model, labels):
+        learning_rate = self.training_params['lr']
+        self.loss = tf.reduce_mean(tf.square(model - labels))
+        self.train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
