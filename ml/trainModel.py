@@ -33,7 +33,7 @@ def main():
     labelsPH = tf.compat.v1.placeholder(tf.float32, (config['data_params']['batch_size'],
         config['model_params']['num_colors'], NUM_CHANNELS))
 
-    model = ColorModel.ColorSuggestModel(config)
+    model = ColorModel.ColorSuggestModelSeparate(config)
     model_out = model.buildModel(imagePH)
     opt = model.buildOpt(model_out, labelsPH)
 

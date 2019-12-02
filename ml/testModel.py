@@ -38,7 +38,7 @@ def main():
     color_data = ColorData.ColorData(config)
     # small train set: 4
     # normal train set: 670
-    data_train, data_test = color_data.get_dataset(4)
+    data_train, data_test = color_data.get_dataset(670)
     data_train = data_train.make_one_shot_iterator().get_next()
     data_test = data_test.make_one_shot_iterator().get_next()
 
@@ -48,7 +48,7 @@ def main():
     labelsPH = tf.compat.v1.placeholder(tf.float32, (config['data_params']['batch_size'],
         config['model_params']['num_colors'], NUM_CHANNELS))
 
-    model = ColorModel.ColorSuggestModel(config)
+    model = ColorModel.ColorSuggestModelSeparate(config)
     model_out = model.buildModel(imagePH)
     model_out_clipped = tf.clip_by_value(model_out, 0., 1.)
     opt = model.buildOpt(model_out, labelsPH)

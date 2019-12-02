@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 
 import ColorOps
 
+NUM_CHANNELS = 3
+
 class ColorSuggestModel:
     def __init__(self, config):
         self.model_params = config['model_params']
@@ -48,3 +50,28 @@ class ColorSuggestModel:
         opt = optimizer.minimize(loss, global_step=global_step)
 
         return dict(opt=opt, lr_assign=lr_assign, lrPH=lrPH, loss=loss, global_step=global_step)
+
+class ColorSuggestModelSeparate(ColorSuggestModel):
+    def buildModel(self, image):
+        channels = [self.buildChannel(image, i) for i in range(NUM_CHANNELS)]
+        out = tf.stack(channels, axis=2)
+        
+        return out
+
+    def buildChannel(self, image, channelIdx):
+        x = tf.cast(image, tf.float32)
+        with tf.variable_scope("separateCnnModel_" + str(channelIdx)):
+            for channels in self.model_params['channels']:
+                x = tf.compat.v1.layers.conv2d(x, channels, self.model_params['size'], self.model_params['stride'],
+                                     padding='SAME', activation=tf.nn.relu)
+                x = tf.compat.v1.layers.max_pooling2d(x, self.model_params['pool_size'], self.model_params['pool_strides'])
+            x = tf.reshape(x, (-1,2*2*self.model_params['channels'][-1]))
+            for dense_size in self.model_params['dense']:
+                x = tf.layers.dense(x, dense_size, activation=tf.nn.relu)
+            x = tf.layers.dense(x, self.model_params['num_colors'])
+        out = tf.reshape(x, (-1,self.model_params['num_colors']))
+
+        # out = tf.clip_by_value(out, 0., 1.)
+        out = tf.sigmoid(out)
+
+        return out
