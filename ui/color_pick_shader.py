@@ -1,15 +1,35 @@
+import sys
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtGui import QPainter
+from PyQt5 import QtGui
+from PyQt5.QtCore import Qt
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from PyQt5 import QtCore, QtGui, QtWidgets
 import ctypes
 from ctypes import c_void_p
-import sys
-sys.path.append('..')
-from color_pick import ColorElement
+import numpy as np 
 
 null = c_void_p(0)
 
-class ExampleQGLWidget(QtWidgets.QOpenGLWidget):
+class ColorElement:
+    def __init__(self, center, radius, color):
+        self.x = center[0]
+        self.y = center[1]
+        self.radius = radius
+        self.color = color
+        self.pressed = False
+        self.dirty = True
+
+    def inCircle(self, point):
+        center = np.array([self.x, self.y])
+        test_pt = np.array([point[0], point[1]])
+        return np.linalg.norm(center - test_pt) <= self.radius / 2.
+
+    def eventWithinShape(self, event):
+        return self.inCircle((event.pos().x(), event.pos().y()))
+
+
+class ColorPickerWidget(QtWidgets.QOpenGLWidget):
 
     def __init__(self, parent):
         QtWidgets.QOpenGLWidget.__init__(self, parent)
@@ -21,7 +41,7 @@ class ExampleQGLWidget(QtWidgets.QOpenGLWidget):
         ColorElement((300, 300), 100, (0, 255, 0)),
         ]
         self.blobCount = len(self.blobs)
-        self.dirty = True
+        self.blob_count_changed = False
 
     def initShaders(self):
         blobArrLen = self.blobCount or 1
@@ -153,7 +173,7 @@ class ExampleQGLWidget(QtWidgets.QOpenGLWidget):
         blobRadius = []
         for blob in blobs:
             blobPos.append(blob.x)
-            blobPos.append(blob.y)
+            blobPos.append(self.height - blob.y)
             blobColor.append(blob.color[0] / 255.)
             blobColor.append(blob.color[1] / 255.)
             blobColor.append(blob.color[2] / 255.)
@@ -178,15 +198,19 @@ class ExampleQGLWidget(QtWidgets.QOpenGLWidget):
 
         #FIXME
         # Rebuild shader when blob number changes
-        # init blob buffers only (don't rebuild shader) when blob
-        # color or position changes, but not the number of blobs?
-        if self.dirty:
-            self.blobs = self.blobs # new blobs
-            self.blobCount = len(self.blobs)
+        if self.blob_count_changed:
             self.initShaders()
             self.initBlobBuffers(self.blobs)
-            self.dirty = False
+            self.blob_count_changed = False
+            for b in self.blobs:
+                b.dirty = False
+        
+        if any([b.dirty for b in self.blobs]):
+            self.initBlobBuffers(self.blobs)
+            for b in self.blobs:
+                b.dirty = False
 
+        
         uW = glGetUniformLocation(self.shaderProgram, 'uW')
         if uW != -1:
             glUniform1f(uW, self.width)
@@ -220,15 +244,49 @@ class ExampleQGLWidget(QtWidgets.QOpenGLWidget):
         self.initShaders()
         self.initBuffers()
 
+    def mousePressEvent(self, event):
+        for c in self.blobs:
+            if c.eventWithinShape(event):
+                c.pressed = True
+                break # select only 1 blob
+        if not any([b.pressed for b in self.blobs]):
+            # create new blob if you didn't click on anything
+            newRadius = np.random.uniform(50, 150)
+            newColor = (np.random.uniform(0, 1, size=3) * 255).astype('int32')
+            newBlob = ColorElement((event.pos().x(), event.pos().y()), newRadius, newColor)
+            self.blobs.append(newBlob)
+            self.blobCount = len(self.blobs)
+            self.blob_count_changed = True
+
+        self.update()
+
+    def mouseMoveEvent(self, event):
+        for c in self.blobs:
+            if c.eventWithinShape(event) and c.pressed:
+                c.x = event.pos().x()
+                c.y = event.pos().y()
+                c.dirty = True
+        self.update()
+
+    def mouseReleaseEvent(self, event):
+        for c in self.blobs:
+            c.pressed = False
+        self.update()
+
+
+
 class TestContainer(QtWidgets.QMainWindow):
 
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
-        widget = ExampleQGLWidget(self)
+        self.setGeometry(30,30,500,400)
+        widget = ColorPickerWidget(self)
         self.setCentralWidget(widget)
 
 if __name__ == '__main__':
-    app = QtWidgets.QApplication(['Shader Example'])
+    app = QtWidgets.QApplication(sys.argv)
     window = TestContainer()
     window.show()
-    app.exec_()
+
+    app.aboutToQuit.connect(app.deleteLater)
+    sys.exit(app.exec_())
