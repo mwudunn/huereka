@@ -59,11 +59,7 @@ class ColorData:
 
         return img
 
-    def get_image_clusters(self, img):
-        n_clusters = self.data_params['num_clusters']
-        labels, img = ColorRemover.get_cluster_labels(img, n_clusters, 0)
-        clusters = get_cluster_centers(img, labels, n_clusters)
-        return clusters
+
 
     def get_dataset(self, test_size):
         dataset = tf.data.Dataset.list_files(self.data_params['img_folder'] + '/*', shuffle=False)
@@ -80,24 +76,23 @@ class ColorData:
 
         return data_train, data_test
 
-    def get_dataset_clusters(self, test_size):
-        clusters_list = []
-        for filename in glob.iglob(self.data_params['img_folder'] + '/*.jpg'):
-            im = cv2.imread(filename)
-            im = cv2.resize(im, (self.data_params['img_size'], self.data_params['img_size']))
-            clusters = self.get_image_clusters(im)
-            clusters_list.append(clusters)
-        print("Done...")
-        clusters_list = np.array(clusters_list)
-
+    def get_dataset_cluster(self, cluster_array_filename="clusters2.npy"):
+        clusters_list = np.load(cluster_array_filename, allow_pickle=True).astype(np.float32)
+        
+        num_clusters = clusters_list.shape[0]
         dataset = tf.data.Dataset.from_tensor_slices(clusters_list)
+        return dataset, num_clusters
 
-
+    def get_dataset_batch(self, test_size, dataset, num_epochs, num_clusters):
+        
         batch_size = self.data_params['batch_size']
-        data_test = dataset.take(test_size).repeat().shuffle(100)
-        data_test = data_test.batch(batch_size).prefetch(8)
-        data_train = dataset.skip(test_size).repeat().shuffle(100)
-        data_train = data_train.batch(batch_size).prefetch(8)
+        repeat_amount = int(num_epochs * num_clusters / batch_size)
+        dataset = dataset.shuffle(10 * batch_size)
+        data_test = dataset.take(test_size)
+        data_test = data_test.repeat(repeat_amount).batch(batch_size)
+        data_train = dataset.skip(test_size)
+        data_train = data_train.repeat(repeat_amount).batch(batch_size)
+
 
         return data_train, data_test
 
@@ -119,14 +114,17 @@ class ColorData:
             img = gaussian_filter(img, sigma=.5)
             new_img.append(img)
             removed_colors.append(removed)
-        return np.array(new_img, dtype=np.float32), np.array(removed_colors, dtype=np.float32)
 
-    def remove_clusters(self, batch, replacement_val):
+        removed_colors = np.sort(np.array(removed_colors), axis=0)
+        return np.array(new_img, dtype=np.float32), removed_colors
+
+    def remove_clusters(self, batch):
         num_colors = self.model_params['num_colors']
         input_centers, removed_centers = [], []
         for clusters in batch:
-            shuffled_clusters = np.random.shuffle(clusters)
-            to_remove, to_keep = shuffled_clusters[:num_colors], shuffled_clusters[num_colors:]
+            np.random.shuffle(clusters)
+            to_remove, to_keep = clusters[:num_colors], clusters[num_colors:]
+            to_remove = np.sort(to_remove, axis=0)
             input_centers.append(to_keep)
             removed_centers.append(to_remove)
         return np.array(input_centers, dtype=np.float32), np.array(removed_centers, dtype=np.float32)
@@ -136,17 +134,49 @@ class ColorData:
     def _gaussian_blur(self, batch):
         pass
 
-def filter_corrupt_images(dataset):
+def get_image_clusters(img, n_clusters):
+    labels, img = ColorRemover.get_cluster_labels(img, n_clusters, 0)
+    clusters = get_cluster_centers(img, labels, n_clusters)
+    return clusters
+
+def compute_clusters_from_images(img_folder, img_size, n_clusters, cluster_array_filename):
+    clusters_list = []
+    i = 0
+    for filename in glob.iglob(img_folder + '/*.jpg'):
+        im = cv2.imread(filename)
+        if np.size(im) <= 1:
+            continue
+        im = cv2.resize(im, (img_size, img_size))
+        clusters = get_image_clusters(im, n_clusters)
+        clusters_list.append(clusters)
+        i += 1
+        if i % 100 == 0:
+            print("Images Processed: " + str(i + 1))
+    print("Done...")
+    clusters_list = np.array(clusters_list)
+    np.save(cluster_array_filename, clusters_list)
+    return clusters_list
+
+def filter_corrupt_images(img_folder):
+    import os
     filtered_dataset = []
-    for x in dataset:
+    i = 0
+    for filename in glob.iglob(img_folder + '/*.jpg'):
+        
+        img = tf.io.read_file(filename)
+        
         try:
-            img = tf.io.read_file(x[0])
             img = tf.image.decode_image(img)
             img.numpy()
-            filtered_dataset.append(x)
+            if img.shape == (343,600,3):
+                print("Image Deleted.")
+                os.remove(filename)            
         except:
-            continue
-    return filtered_dataset
+            print("Image deleted.")
+            os.remove(filename)
+        if i % 100 == 0:
+            print(i)
+        i+=1
 
 def main():
     parser = argparse.ArgumentParser(description='Art Color Dataset')
@@ -159,16 +189,15 @@ def main():
     tf.compat.v1.enable_eager_execution()
 
     color_data = ColorData(config)
-    data_train, data_test = color_data.get_dataset(8)
+    img_folder = config['data_params']['img_folder']
 
     # for weeding out images that break when decoded
-    filtered_data_train = filter_corrupt_images(data_train)
-    filtered_data_test = filter_corrupt_images(data_test)
+    filtered_data_train = filter_corrupt_images(img_folder)
 
-    for batch in filtered_data_test:
-        img, colors = color_data.remove_colors(batch, replacement_val=1.)
-        for i in range(len(batch)):
-            displayOne(batch, img, colors, i)
+    # for batch in filtered_data_test:
+    #     img, colors = color_data.remove_colors(batch, replacement_val=1.)
+    #     for i in range(len(batch)):
+    #         displayOne(batch, img, colors, i)
             
 
 if __name__ == '__main__':
