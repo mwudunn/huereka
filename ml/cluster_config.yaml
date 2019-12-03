@@ -1,0 +1,13 @@
+data_params:
+  img_folder: "media_oilpaint"
+  num_clusters: 6
+  img_size: 64
+
+model_params:
+  num_colors: 1
+  dense: [32, 64, 128, 256]
+
+training_params:
+  weight_decay: 0
+  lr: 1e-3
+  steps: [1000, 1000, 1000]

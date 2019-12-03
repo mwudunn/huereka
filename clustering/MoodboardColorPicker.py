@@ -14,11 +14,8 @@ from colormap import rgb2hex
 import math 
 
 def cluster_colors_kmeans(sampled_colors, n_clusters):
-
     # using KMeans algorithm to find n clusters
     kmeans = KMeans(n_clusters=n_clusters).fit(sampled_colors)
-    
-    # reconstructing compressed image with the found clusters
     
     centers = kmeans.cluster_centers_
     plot_colors(centers)
@@ -58,8 +55,6 @@ def get_cluster_centers(colors, labels, n_clusters):
     return centers
 
 def cluster_colors(colors, n_clusters):
-    # using DBSCAN algorithm to find n clusters
-    # dist_matrix = compute_exp_dist_matrix(colors)
     dist_matrix = compute_exp_dist_matrix(colors)
 
     clustering = AgglomerativeClustering(n_clusters=n_clusters, affinity="precomputed", linkage='average')
@@ -67,12 +62,6 @@ def cluster_colors(colors, n_clusters):
     clustering.fit(dist_matrix)
     labels = clustering.labels_
     return labels
-
-    # reconstructing compressed image with the found clusters
-    
-    # centers = ward.cluster_centers_
-    # plot_colors(centers)
-    # return (centers* 255).astype(int)
 
 def plot_colors(colors):
     x_vals = range(0, len(colors))

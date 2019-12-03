@@ -62,6 +62,7 @@ def main():
                     train_writer.flush()
 
                     if i % save_steps == 0:
+                        print("### Iteration: " + str(i) + " ###")
                         train_loss = loss
                         batch = sess.run(data_test)
                         img, colors = color_data.remove_colors(batch, replacement_val=1.)
