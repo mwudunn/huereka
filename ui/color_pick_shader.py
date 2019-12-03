@@ -28,7 +28,7 @@ class ColorElement:
 
     def eventWithinShape(self, event):
         print("Mouse location", event.pos().x(), event.pos().y())
-        print("blob location")
+        print("blob location", self.x, self.y)
         return self.inCircle((event.pos().x(), event.pos().y()))
 
 
@@ -50,8 +50,6 @@ class ColorPickerWidget(QtOpenGL.QGLWidget):
         ]
         self.blobCount = len(self.blobs)
         self.blob_count_changed = False
-
-
 
     def initShaders(self):
         blobArrLen = self.blobCount or 1
@@ -288,7 +286,6 @@ class ColorPickerWidget(QtOpenGL.QGLWidget):
         self.update()
 
 
-
 class TestContainer(QtWidgets.QMainWindow):
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
@@ -301,6 +298,5 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     window = TestContainer()
     window.show()
-
     app.aboutToQuit.connect(app.deleteLater)
     sys.exit(app.exec_())

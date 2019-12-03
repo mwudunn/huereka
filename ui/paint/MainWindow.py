@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mainwindow.ui'
+# Form implementation generated from reading ui file 'mainwindow_test.ui'
 #
-# Created by: PyQt5 UI code generator 5.10
+# Created by: PyQt5 UI code generator 5.13.2
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(549, 452)
+        MainWindow.resize(925, 660)
         self.centralWidget = QtWidgets.QWidget(MainWindow)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
@@ -602,19 +604,19 @@ class Ui_MainWindow(object):
         self.colorButton_28.setObjectName("colorButton_28")
         self.gridLayout_2.addWidget(self.colorButton_28, 1, 13, 1, 1)
         self.horizontalLayout_2.addWidget(self.widget_2)
-        # self.stampnextButton = QtWidgets.QPushButton(self.centralWidget)
-        # self.stampnextButton.setMinimumSize(QtCore.QSize(78, 55))
-        # self.stampnextButton.setMaximumSize(QtCore.QSize(78, 55))
-        # self.stampnextButton.setText("")
-        # self.stampnextButton.setIconSize(QtCore.QSize(80, 50))
-        # self.stampnextButton.setObjectName("stampnextButton")
-        #self.horizontalLayout_2.addWidget(self.stampnextButton)
+        self.stampnextButton = QtWidgets.QPushButton(self.centralWidget)
+        self.stampnextButton.setMinimumSize(QtCore.QSize(78, 55))
+        self.stampnextButton.setMaximumSize(QtCore.QSize(78, 55))
+        self.stampnextButton.setText("")
+        self.stampnextButton.setIconSize(QtCore.QSize(80, 50))
+        self.stampnextButton.setObjectName("stampnextButton")
+        self.horizontalLayout_2.addWidget(self.stampnextButton)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem1)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 549, 22))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 925, 22))
         self.menuBar.setObjectName("menuBar")
         self.menuFIle = QtWidgets.QMenu(self.menuBar)
         self.menuFIle.setObjectName("menuFIle")
@@ -735,4 +737,3 @@ class Ui_MainWindow(object):
         self.actionItalic.setShortcut(_translate("MainWindow", "Ctrl+I"))
         self.actionUnderline.setText(_translate("MainWindow", "Underline"))
         self.actionFillShapes.setText(_translate("MainWindow", "Fill Shapes?"))
-
