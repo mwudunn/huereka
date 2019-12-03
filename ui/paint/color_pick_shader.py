@@ -299,9 +299,10 @@ class ColorPickerWidget(QtOpenGL.QGLWidget):
             if c.positionWithinShape(event.x(), event.y()):
                 targetBlob = c
                 break
-        numDegree = event.angleDelta().y()
-        targetBlob.radius += numDegree
-        targetBlob.dirty = True
+        if targetBlob:
+            numDegree = event.angleDelta().y() / 2 
+            targetBlob.radius += numDegree
+            targetBlob.dirty = True
         self.update()
         
         
