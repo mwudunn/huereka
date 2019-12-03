@@ -89,6 +89,7 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
 
         fragment = """
         #version 330
+        out vec4 outColor;
         precision highp float;
         in float vW;
         in float vH;
@@ -126,10 +127,10 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
                 }}
             }}
             if (influenceSum < 0.4) {{
-                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                outColor = vec4(1.0, 1.0, 1.0, 1.0);
             }}
             else {{
-                gl_FragColor = vec4(colors / influenceSum, 1.0);
+                outColor = vec4(colors / influenceSum, 1.0);
             }}
         }}
         """.format(vInBlobStr, vInBlobColorStr, vInBlobRadiusStr, self.blobCount)
