@@ -47,21 +47,24 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
         blobArrLen = self.blobCount or 1
 
         uBlobStr = 'uniform vec2 uBlobPos[{}];'.format(blobArrLen)
-        vBlobStr = 'varying vec2 vBlobPos[{}];'.format(blobArrLen)
+        vOutBlobStr = 'out vec2 vBlobPos[{}];'.format(blobArrLen)
+        vInBlobStr = 'in vec2 vBlobPos[{}];'.format(blobArrLen)
 
         uBlobColorStr = 'uniform vec3 uBlobColor[{}];'.format(blobArrLen)
-        vBlobColorStr = 'varying vec3 vBlobColor[{}];'.format(blobArrLen)
+        vOutBlobColorStr = 'out vec3 vBlobColor[{}];'.format(blobArrLen)
+        vInBlobColorStr = 'in vec3 vBlobColor[{}];'.format(blobArrLen)
 
         uBlobRadiusStr = 'uniform float uBlobRadius[{}];'.format(blobArrLen)
-        vBlobRadiusStr = 'varying float vBlobRadius[{}];'.format(blobArrLen)
+        vOutBlobRadiusStr = 'out float vBlobRadius[{}];'.format(blobArrLen)
+        vInBlobRadiusStr = 'in float vBlobRadius[{}];'.format(blobArrLen)
 
         vertex = """
-        #version 110
+        #version 330
         in vec4 position;
         uniform float uW;
         uniform float uH;
-        varying float vW;
-        varying float vH;
+        out float vW;
+        out float vH;
         {}
         {}
         {}
@@ -78,18 +81,18 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
             }}
             gl_Position = position;
         }}
-        """.format(uBlobStr, vBlobStr, uBlobColorStr, vBlobColorStr, uBlobRadiusStr, vBlobRadiusStr, self.blobCount)
+        """.format(uBlobStr, vOutBlobStr, uBlobColorStr, vOutBlobColorStr, uBlobRadiusStr, vOutBlobRadiusStr, self.blobCount)
 
         vShader = self.getShader(vertex, GL_VERTEX_SHADER)
         if not vShader:
             return
 
         fragment = """
-        #version 110
+        #version 330
         precision highp float;
-        varying float vW;
-        varying float vH;
-        varying float vBlobCnt;
+        in float vW;
+        in float vH;
+        in float vBlobCnt;
         {}
         {}
         {}
@@ -129,7 +132,7 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
                 gl_FragColor = vec4(colors / influenceSum, 1.0);
             }}
         }}
-        """.format(vBlobStr, vBlobColorStr, vBlobRadiusStr, self.blobCount)
+        """.format(vInBlobStr, vInBlobColorStr, vInBlobRadiusStr, self.blobCount)
 
         fShader = self.getShader(fragment, GL_FRAGMENT_SHADER)
         if not fShader:
