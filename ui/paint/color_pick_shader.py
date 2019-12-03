@@ -206,7 +206,6 @@ class ColorPickerWidget(QtOpenGL.QGLWidget):
     def paintGL(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
         glClear(GL_COLOR_BUFFER_BIT)
-
         glUseProgram(self.shaderProgram)
 
         #FIXME
@@ -279,9 +278,6 @@ class ColorPickerWidget(QtOpenGL.QGLWidget):
                 pxSelect = QRect(QPoint(0, 0), QSize(self.geometry().width(), self.geometry().height()))
                 pxMap = self.grab(rectangle=pxSelect)
                 pxMap.save("test", "jpg")
-
-
-
         self.update()
 
     def mouseMoveEvent(self, event):
@@ -297,13 +293,16 @@ class ColorPickerWidget(QtOpenGL.QGLWidget):
             c.pressed = False
         self.update()
 
-
     def wheelEvent(self, event):
+        targetBlob = None 
         for c in self.blobs:
             if c.positionWithinShape(event.x(), event.y()):
-                print("selected")
-                return 
-        return 
+                targetBlob = c
+                break
+        numDegree = event.angleDelta().y()
+        targetBlob.radius += numDegree
+        targetBlob.dirty = True
+        self.update()
         
         
 

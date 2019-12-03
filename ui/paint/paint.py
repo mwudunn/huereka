@@ -749,11 +749,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pxImage = self_.grabFrameBuffer() 
                 r,g,b,a = QColor(pxImage.pixel(cursorXPos, cursorYPos)).getRgbF()
                 self.set_primary_color(floatRGB2hex((r, g, b)))
-
             self_.update()
 
-
         colorSelector.mousePressEvent = types.MethodType(amousePressEvent, colorSelector)
+
 
         # Setup up action signals
         self.actionCopy.triggered.connect(self.copy_to_clipboard)
