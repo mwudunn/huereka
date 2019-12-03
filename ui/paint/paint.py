@@ -663,6 +663,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         labels, centers = compute_clusters(colors, num_color)
         return centers
 
+    def hex2rgbF(self, hex):
+        value = hex
+        value = value.lstrip('#')
+        lv = len(value)
+        return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+
     def load_image(self, path):
         pixmap = QPixmap(path)
         self.canvas.setPixmap(pixmap)
@@ -680,6 +686,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Enable focus to capture key inputs.
         self.canvas.setFocusPolicy(Qt.StrongFocus)
         self.horizontalLayout.addWidget(self.canvas)
+        self.colorToMix = None 
 
         # Setup the mode buttons
         mode_group = QButtonGroup(self)
@@ -706,10 +713,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             def patch_mousePressEvent(self_, e):
                 if e.button() == Qt.LeftButton:
+                    self.colorToMix = self_.hex
                     self.set_primary_color(self_.hex)
 
                 elif e.button() == Qt.RightButton:
-                    self.set_secondary_color(self_.hex)
+                    #self.set_secondary_color(self_.hex)
+                    pass
 
             btn.mousePressEvent = types.MethodType(patch_mousePressEvent, btn)
 
@@ -723,14 +732,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if c.eventWithinShape(event):
                         c.pressed = True
                         break # select only 1 blob
-                if not any([b.pressed for b in self_.blobs]):
+                if not any([b.pressed for b in self_.blobs]) and self.colorToMix:
                     # create new blob if you didn't click on anything
                     newRadius = np.random.uniform(50, 150)
-                    newColor = (np.random.uniform(0, 1, size=3) * 255).astype('int32')
+                    #newColor = (np.random.uniform(0, 1, size=3) * 255).astype('int32')
+                    newColor = self.hex2rgbF(self.colorToMix)
                     newBlob = ColorElement((event.pos().x(), event.pos().y()), newRadius, newColor)
                     self_.blobs.append(newBlob)
                     self_.blobCount = len(self_.blobs)
                     self_.blob_count_changed = True
+                    self.colorToMix = None 
 
             elif event.button() == Qt.LeftButton:
                 cursorXPos = event.pos().x()
@@ -738,9 +749,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pxImage = self_.grabFrameBuffer() 
                 r,g,b,a = QColor(pxImage.pixel(cursorXPos, cursorYPos)).getRgbF()
                 self.set_primary_color(floatRGB2hex((r, g, b)))
-
-
-
 
             self_.update()
 
@@ -879,10 +887,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 def patch_mousePressEvent(self_, e):
                     if e.button() == Qt.LeftButton:
+                        self.colorToMix = (self_.hex)
                         self.set_primary_color(self_.hex)
 
                     elif e.button() == Qt.RightButton:
-                        self.set_secondary_color(self_.hex)
+                        #self.set_secondary_color(self_.hex)
+                        pass
 
                 btn.mousePressEvent = types.MethodType(patch_mousePressEvent, btn)
             self.canvas.setPixmap(pixmap)
