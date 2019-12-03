@@ -32,14 +32,16 @@ class ColorElement:
         return self.inCircle((event.pos().x(), event.pos().y()))
 
 
-class ColorPickerWidget(QtOpenGL.QGLWidget):
+class ColorPickerWidget(QtWidgets.QOpenGLWidget):
 
     def __init__(self, parent):
-        fmt = QtOpenGL.QGLFormat()
+        fmt = QtGui.QSurfaceFormat()
         fmt.setVersion(3, 3)
-        fmt.setProfile(QtOpenGL.QGLFormat.CoreProfile)
-        fmt.setSampleBuffers(True)
-        super(ColorPickerWidget, self).__init__(fmt, None)
+        fmt.setProfile(QtGui.QSurfaceFormat.CoreProfile)
+        fmt.setSamples(2)
+        #fmt.setSampleBuffers(True)
+        super(ColorPickerWidget, self).__init__(None)
+        self.setFormat(fmt)
         #QtWidgets.QOpenGLWidget.__init__(self, parent)
 
         #FIXME
