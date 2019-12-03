@@ -1,3 +1,4 @@
+from PyQt5 import QtGui
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -11,7 +12,7 @@ import types
 import sys 
 sys.path.append("../../clustering")
 from MoodboardColorPicker import *
-
+from color_pick_shader import *
 
 BRUSH_MULT = 3
 SPRAY_PAINT_MULT = 5
@@ -153,6 +154,7 @@ class Canvas(QLabel):
         fn = getattr(self, "%s_mouseMoveEvent" % self.mode, None)
         if fn:
             return fn(e)
+
 
     def mouseReleaseEvent(self, e):
         fn = getattr(self, "%s_mouseReleaseEvent" % self.mode, None)
@@ -711,6 +713,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             btn.mousePressEvent = types.MethodType(patch_mousePressEvent, btn)
 
+        colorSelector = getattr(self, "widget_4")
+
+
+
+        def amousePressEvent(self_, event):
+            if event.button() == Qt.RightButton:
+                for c in self_.blobs:
+                    if c.eventWithinShape(event):
+                        c.pressed = True
+                        break # select only 1 blob
+                if not any([b.pressed for b in self_.blobs]):
+                    # create new blob if you didn't click on anything
+                    newRadius = np.random.uniform(50, 150)
+                    newColor = (np.random.uniform(0, 1, size=3) * 255).astype('int32')
+                    newBlob = ColorElement((event.pos().x(), event.pos().y()), newRadius, newColor)
+                    self_.blobs.append(newBlob)
+                    self_.blobCount = len(self_.blobs)
+                    self_.blob_count_changed = True
+            elif event.button() == Qt.LeftButton:
+                print("Selecting color")
+
+
+
+            self_.update()
+
+
+        colorSelector.mousePressEvent = types.MethodType(amousePressEvent, colorSelector)
+
         # Setup up action signals
         self.actionCopy.triggered.connect(self.copy_to_clipboard)
 
@@ -880,10 +910,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         pixmap = self.canvas.pixmap()
         self.canvas.setPixmap(pixmap.transformed(QTransform().scale(1, -1)))
 
+    def keyPressEvent(self, event):
+        print("Pressed a key")
 
 
 if __name__ == '__main__':
 
     app = QApplication([])
     window = MainWindow()
+
     app.exec_()
