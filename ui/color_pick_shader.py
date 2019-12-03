@@ -1,5 +1,5 @@
 import sys
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtOpenGL
 from PyQt5.QtGui import QPainter
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
@@ -8,6 +8,7 @@ from OpenGL.GLU import *
 import ctypes
 from ctypes import c_void_p
 import numpy as np 
+
 
 null = c_void_p(0)
 
@@ -26,13 +27,20 @@ class ColorElement:
         return np.linalg.norm(center - test_pt) <= self.radius / 2.
 
     def eventWithinShape(self, event):
+        print("Mouse location", event.pos().x(), event.pos().y())
+        print("blob location")
         return self.inCircle((event.pos().x(), event.pos().y()))
 
 
-class ColorPickerWidget(QtWidgets.QOpenGLWidget):
+class ColorPickerWidget(QtOpenGL.QGLWidget):
 
     def __init__(self, parent):
-        QtWidgets.QOpenGLWidget.__init__(self, parent)
+        fmt = QtOpenGL.QGLFormat()
+        fmt.setVersion(3, 3)
+        fmt.setProfile(QtOpenGL.QGLFormat.CoreProfile)
+        fmt.setSampleBuffers(True)
+        super(ColorPickerWidget, self).__init__(fmt, None)
+        #QtWidgets.QOpenGLWidget.__init__(self, parent)
 
         #FIXME
         self.blobs = [
@@ -43,25 +51,30 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
         self.blobCount = len(self.blobs)
         self.blob_count_changed = False
 
+
+
     def initShaders(self):
         blobArrLen = self.blobCount or 1
 
         uBlobStr = 'uniform vec2 uBlobPos[{}];'.format(blobArrLen)
-        vBlobStr = 'varying vec2 vBlobPos[{}];'.format(blobArrLen)
+        vOutBlobStr = 'out vec2 vBlobPos[{}];'.format(blobArrLen)
+        vInBlobStr = 'in vec2 vBlobPos[{}];'.format(blobArrLen)
 
         uBlobColorStr = 'uniform vec3 uBlobColor[{}];'.format(blobArrLen)
-        vBlobColorStr = 'varying vec3 vBlobColor[{}];'.format(blobArrLen)
+        vOutBlobColorStr = 'out vec3 vBlobColor[{}];'.format(blobArrLen)
+        vInBlobColorStr = 'in vec3 vBlobColor[{}];'.format(blobArrLen)
 
         uBlobRadiusStr = 'uniform float uBlobRadius[{}];'.format(blobArrLen)
-        vBlobRadiusStr = 'varying float vBlobRadius[{}];'.format(blobArrLen)
+        vOutBlobRadiusStr = 'out float vBlobRadius[{}];'.format(blobArrLen)
+        vInBlobRadiusStr = 'in float vBlobRadius[{}];'.format(blobArrLen)
 
         vertex = """
-        #version 120
+        #version 330
         in vec4 position;
         uniform float uW;
         uniform float uH;
-        varying float vW;
-        varying float vH;
+        out float vW;
+        out float vH;
         {}
         {}
         {}
@@ -78,25 +91,26 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
             }}
             gl_Position = position;
         }}
-        """.format(uBlobStr, vBlobStr, uBlobColorStr, vBlobColorStr, uBlobRadiusStr, vBlobRadiusStr, self.blobCount)
+        """.format(uBlobStr, vOutBlobStr, uBlobColorStr, vOutBlobColorStr, uBlobRadiusStr, vOutBlobRadiusStr, self.blobCount)
 
         vShader = self.getShader(vertex, GL_VERTEX_SHADER)
         if not vShader:
             return
 
         fragment = """
-        #version 120
+        #version 330
+        out vec4 outColor;
         precision highp float;
-        varying float vW;
-        varying float vH;
-        varying float vBlobCnt;
+        in float vW;
+        in float vH;
+        in float vBlobCnt;
         {}
         {}
         {}
         void main(void) {{
             const int blobCnt = {};
             if (blobCnt == 0) {{
-                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                outColor = vec4(1.0, 1.0, 1.0, 1.0);
                 return;
             }}
             float b2 = 0.25;
@@ -123,13 +137,13 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
                 }}
             }}
             if (influenceSum < 0.4) {{
-                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                outColor = vec4(1.0, 1.0, 1.0, 1.0);
             }}
             else {{
-                gl_FragColor = vec4(colors / influenceSum, 1.0);
+                outColor = vec4(colors / influenceSum, 1.0);
             }}
         }}
-        """.format(vBlobStr, vBlobColorStr, vBlobRadiusStr, self.blobCount)
+        """.format(vInBlobStr, vInBlobColorStr, vInBlobRadiusStr, self.blobCount)
 
         fShader = self.getShader(fragment, GL_FRAGMENT_SHADER)
         if not fShader:
@@ -188,7 +202,6 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
         if uRadius != -1:
             glUniform1fv(uRadius, len(blobRadius), blobRadius)
 
-
     def paintGL(self):
         glClearColor(0.0, 0.0, 0.0, 0.0)
         glClear(GL_COLOR_BUFFER_BIT)
@@ -220,25 +233,27 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
 
         if self.positionBuffer != -1:
             glBindBuffer(GL_ARRAY_BUFFER, self.positionBuffer)
+            
+        vao = glGenVertexArrays(1)
+        glBindVertexArray(vao)
         glEnableVertexAttribArray(0)
         glVertexAttribPointer(0, 2, GL_FLOAT, False, 0, null)
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4)
-
 
     def resizeGL(self, w, h):
         self.width = w
         self.height = h
         glViewport(0, 0, w, h)
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
+        #glMatrixMode(GL_PROJECTION)
+        #glLoadIdentity()
 
     def initializeGL(self):
         glViewport(0,0, 640, 480)
         self.width, self.height = 640, 480
         glClearColor(0.0, 0.0, 0.0, 1.0)
         glClearDepth(1.0)
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
+        #glMatrixMode(GL_PROJECTION)
+        #glLoadIdentity()
 
         self.initShaders()
         self.initBuffers()
@@ -275,12 +290,12 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
 
 
 class TestContainer(QtWidgets.QMainWindow):
-
     def __init__(self):
         QtWidgets.QMainWindow.__init__(self)
         self.setGeometry(30,30,500,400)
         widget = ColorPickerWidget(self)
         self.setCentralWidget(widget)
+
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
