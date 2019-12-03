@@ -56,7 +56,7 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
         vBlobRadiusStr = 'varying float vBlobRadius[{}];'.format(blobArrLen)
 
         vertex = """
-        #version 120
+        #version 110
         in vec4 position;
         uniform float uW;
         uniform float uH;
@@ -85,7 +85,7 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
             return
 
         fragment = """
-        #version 120
+        #version 110
         precision highp float;
         varying float vW;
         varying float vH;
@@ -229,16 +229,12 @@ class ColorPickerWidget(QtWidgets.QOpenGLWidget):
         self.width = w
         self.height = h
         glViewport(0, 0, w, h)
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
 
     def initializeGL(self):
         glViewport(0,0, 640, 480)
         self.width, self.height = 640, 480
         glClearColor(0.0, 0.0, 0.0, 1.0)
         glClearDepth(1.0)
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
 
         self.initShaders()
         self.initBuffers()
