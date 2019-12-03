@@ -731,8 +731,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self_.blobs.append(newBlob)
                     self_.blobCount = len(self_.blobs)
                     self_.blob_count_changed = True
+
             elif event.button() == Qt.LeftButton:
-                print("Selecting color")
+                cursorXPos = event.pos().x()
+                cursorYPos = event.pos().y()
+                pxImage = self_.grabFrameBuffer() 
+                r,g,b,a = QColor(pxImage.pixel(cursorXPos, cursorYPos)).getRgbF()
+                self.set_primary_color(floatRGB2hex((r, g, b)))
+
 
 
 
