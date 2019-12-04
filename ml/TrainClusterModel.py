@@ -5,7 +5,7 @@ import argparse
 import yaml
 
 NUM_CHANNELS = 3
-num_epochs = 10000
+num_epochs = 50000
 def main():
     parser = argparse.ArgumentParser(description='Train Huereka Model')
     parser.add_argument('--config', type=str, default='cluster_config.yaml')

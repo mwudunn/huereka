@@ -10,11 +10,10 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from color_pick_shader import *
 
-
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(969, 460)
+        MainWindow.resize(1253, 460)
         self.centralWidget = QtWidgets.QWidget(MainWindow)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         sizePolicy.setHorizontalStretch(0)
@@ -268,10 +267,10 @@ class Ui_MainWindow(object):
         self.canvas.setText("")
         self.canvas.setObjectName("canvas")
         self.horizontalLayout.addWidget(self.canvas)
+        
         self.widget_4 = ColorPickerWidget()#QtWidgets.QWidget(self.centralWidget)
         self.widget_4.setObjectName("widget_4")
         self.widget_4.setGeometry(QtCore.QRect(0, 0, 140, 140))
-
         self.horizontalLayout.addWidget(self.widget_4)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
@@ -622,7 +621,7 @@ class Ui_MainWindow(object):
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 969, 22))
+        self.menuBar.setGeometry(QtCore.QRect(0, 0, 1253, 22))
         self.menuBar.setObjectName("menuBar")
         self.menuFIle = QtWidgets.QMenu(self.menuBar)
         self.menuFIle.setObjectName("menuFIle")
@@ -720,7 +719,8 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Piecasso"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Heureka"))
+        #self.label.setText(_translate("MainWindow", "TextLabel"))
         self.menuFIle.setTitle(_translate("MainWindow", "FIle"))
         self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
         self.menuImage.setTitle(_translate("MainWindow", "Image"))

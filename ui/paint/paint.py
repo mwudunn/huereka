@@ -35,6 +35,7 @@ MODES = [
 ]
 
 CANVAS_DIMENSIONS = 600, 400
+Moodboard_DIMENSIONS = 300, 400
 
 SELECTION_PEN = QPen(QColor(0xff, 0xff, 0xff), 1, Qt.DashLine)
 PREVIEW_PEN = QPen(QColor(0xff, 0xff, 0xff), 1, Qt.SolidLine)
@@ -53,6 +54,48 @@ def build_font(config):
     font.setItalic(config['italic'])
     font.setUnderline(config['underline'])
     return font
+
+class Moodboard(QLabel):
+    mode = 'rectangle'
+
+    primary_color = QColor(Qt.black)
+    secondary_color = None
+
+    primary_color_updated = pyqtSignal(str)
+    secondary_color_updated = pyqtSignal(str)
+
+    # Store configuration settings, including pen width, fonts etc.
+    config = {
+        # Drawing options.
+        'size': 1,
+        'fill': True,
+        # Font options.
+        'font': QFont('Times'),
+        'fontsize': 12,
+        'bold': False,
+        'italic': False,
+        'underline': False,
+    }
+
+    active_color = None
+    preview_pen = None
+
+    timer_event = None
+
+
+    def initialize(self):
+        self.background_color = QColor(self.secondary_color) if self.secondary_color else QColor(Qt.white)
+        self.reset()
+
+    def reset(self):
+        # Create the pixmap for display.
+        self.setPixmap(QPixmap(*Moodboard_DIMENSIONS))
+        # Clear the canvas.
+        self.pixmap().fill(self.background_color)
+
+
+    def set_config(self, key, value):
+        self.config[key] = value
 
 class Canvas(QLabel):
     mode = 'rectangle'
@@ -685,7 +728,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.canvas.setMouseTracking(True)
         # Enable focus to capture key inputs.
         self.canvas.setFocusPolicy(Qt.StrongFocus)
+        
+        self.moodboard = Moodboard()
+        self.moodboard.initialize()
+        # We need to enable mouse tracking to follow the mouse without the button pressed.
+        self.moodboard.setFocusPolicy(Qt.StrongFocus)
+
         self.horizontalLayout.addWidget(self.canvas)
+        self.horizontalLayout.addWidget(self.moodboard)
         self.colorToMix = None 
 
         # Setup the mode buttons
@@ -859,7 +909,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ih = pixmap.height()
 
             # Get the size of the space we're filling.
-            cw, ch = CANVAS_DIMENSIONS
+            cw, ch = Moodboard_DIMENSIONS
 
             if iw/cw < ih/ch:  # The height is relatively bigger than the width.
                 pixmap = pixmap.scaledToWidth(cw)
@@ -894,10 +944,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         pass
 
                 btn.mousePressEvent = types.MethodType(patch_mousePressEvent, btn)
-            self.canvas.setPixmap(pixmap)
+            self.moodboard.setPixmap(pixmap)
 
            
-
 
     def save_file(self):
         """
