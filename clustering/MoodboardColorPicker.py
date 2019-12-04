@@ -13,6 +13,10 @@ import matplotlib as mpl
 from colormap import rgb2hex
 import math 
 
+from colormath.color_objects import LabColor, sRGBColor, XYZColor
+from colormath.color_diff import delta_e_cie2000
+from colormath.color_conversions import convert_color
+
 def cluster_colors_kmeans(sampled_colors, n_clusters):
     # using KMeans algorithm to find n clusters
     kmeans = KMeans(n_clusters=n_clusters).fit(sampled_colors)
@@ -22,10 +26,15 @@ def cluster_colors_kmeans(sampled_colors, n_clusters):
     return (centers* 255).astype(int)
 
 def compute_squared_dist_matrix(points):
-    dist_matrix = np.sum(((points[:, np.newaxis, :] - points[np.newaxis, :, :]) ** 2 * (3/2)), axis = -1)
+    dist_matrix = np.sum(((dist(points)) ** 2), axis = -1)
 
     return dist_matrix
 
+def dist(points):
+    return points[:, np.newaxis, :] - points[np.newaxis, :, :]
+
+# def delta_e(points):
+#     LAB = convert_color(blue_grey_sRGB, LabColor)
 
 def compute_exp_dist_matrix(points):
     dist_matrix = np.sum(np.sqrt((points[:, np.newaxis, :] - points[np.newaxis, :, :]) ** 2), axis = -1)

@@ -76,20 +76,24 @@ class ColorSuggestModelSeparate(ColorSuggestModel):
 
 class ClusterSuggestModel:
     def __init__(self, config):
+        self.data_params = config['data_params']
         self.model_params = config['model_params']
         self.training_params = config['training_params']
         
     def build_model(self, input_placeholder):
         x = input_placeholder
-        with tf.variable_scope("fcModel"):
+        input_num_clusters = int(self.data_params['num_clusters'] - self.model_params['num_colors'])
+        with tf.name_scope("fcModel"):
+            x = tf.reshape(x, (-1, 3 * input_num_clusters))
             for dense_size in self.model_params["dense_size"]:
-                x = tf.layers.dense(x, dense_size, activation=tf.tanh)
+                x = tf.layers.dense(x, dense_size, activation=tf.nn.relu)
             x = tf.layers.dense(x, self.model_params['num_colors'] * 3)
-
-        out = tf.reshape(x, (-1, self.model_params['num_colors'], 3))
-        return out
+        x = tf.reshape(x, (-1, self.model_params['num_colors'], 3))
+        return x
 
     def define_train_op(self, model, labels):
+        global_step = tf.compat.v1.train.get_or_create_global_step()
+
         learning_rate = self.training_params['lr']
         self.loss = tf.reduce_mean(tf.square(model - labels))
-        self.train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss)
+        self.train_op = tf.compat.v1.train.AdamOptimizer(learning_rate).minimize(self.loss, global_step=global_step)

@@ -77,7 +77,10 @@ class ColorData:
         return data_train, data_test
 
     def get_dataset_cluster(self, cluster_array_filename="clusters2.npy"):
-        clusters_list = np.load(cluster_array_filename, allow_pickle=True).astype(np.float32)
+        try:
+            clusters_list = np.load(cluster_array_filename, allow_pickle=True).astype(np.float32)
+        except:
+            clusters_list = compute_clusters_from_images(self.data_params['img_folder'], self.data_params['img_size'], self.data_params['num_clusters'], cluster_array_filename)
         
         num_clusters = clusters_list.shape[0]
         dataset = tf.data.Dataset.from_tensor_slices(clusters_list)
