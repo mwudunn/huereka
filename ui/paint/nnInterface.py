@@ -8,7 +8,7 @@ import cv2
 
 class NNInterface:
     def __init__(self, config, checkpoint):
-        with open(args.config) as f:
+        with open(config) as f:
             config = yaml.load(f, Loader=yaml.CLoader)
         self.img_size = config['data_params']['img_size']
         self.imagePH = tf.compat.v1.placeholder(tf.float32, (config['data_params']['batch_size'],
@@ -21,11 +21,6 @@ class NNInterface:
         saver = tf.compat.v1.train.Saver()
         checkpoint = tf.train.latest_checkpoint(checkpoint)
         saver.restore(self.sess, checkpoint)
-
-
-    def __del__(self):
-        if self.sess:
-            self.sess.close()
 
     def predict(self, img):
         img = cv2.resize(img, (self.img_size, self.img_size))
