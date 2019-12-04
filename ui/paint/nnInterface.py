@@ -16,7 +16,7 @@ class NNInterface:
         model = ColorModel.ColorSuggestModelSeparate(config)
         model_out = model.buildModel(self.imagePH)
         self.model_out_clipped = tf.clip_by_value(model_out, 0., 1.)
-        self.session = tf.Session()
+        self.sess = tf.Session()
 
         saver = tf.compat.v1.train.Saver()
         checkpoint = tf.train.latest_checkpoint(checkpoint)

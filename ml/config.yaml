@@ -2,7 +2,7 @@ data_params:
   img_folder: "media_oilpaint"
   img_size: 64
   crop_pad_px: 32
-  batch_size: 128
+  batch_size: 1
   num_clusters: 4
 
 model_params:
