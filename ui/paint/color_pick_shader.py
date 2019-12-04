@@ -281,6 +281,7 @@ class ColorPickerWidget(QtOpenGL.QGLWidget):
         self.update()
 
     def mouseMoveEvent(self, event):
+        print(event.button() == Qt.LeftButton)
         for c in self.blobs:
             if c.eventWithinShape(event) and c.pressed:
                 c.x = event.pos().x()
