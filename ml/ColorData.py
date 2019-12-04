@@ -90,10 +90,12 @@ class ColorData:
         
         batch_size = self.data_params['batch_size']
         repeat_amount = int(num_epochs * num_clusters / batch_size)
-        dataset = dataset.shuffle(10 * batch_size)
+        
         data_test = dataset.take(test_size)
+        dataset = data_test.shuffle(10 * batch_size)
         data_test = data_test.repeat(repeat_amount).batch(batch_size)
         data_train = dataset.skip(test_size)
+        data_train = data_train.shuffle(10 * batch_size)
         data_train = data_train.repeat(repeat_amount).batch(batch_size)
 
 
@@ -118,7 +120,7 @@ class ColorData:
             new_img.append(img)
             removed_colors.append(removed)
 
-        removed_colors = np.sort(np.array(removed_colors), axis=0)
+        removed_colors = np.array(removed_colors)
         return np.array(new_img, dtype=np.float32), removed_colors
 
     def remove_clusters(self, batch):
@@ -127,7 +129,7 @@ class ColorData:
         for clusters in batch:
             np.random.shuffle(clusters)
             to_remove, to_keep = clusters[:num_colors], clusters[num_colors:]
-            to_remove = np.sort(to_remove, axis=0)
+            to_remove = to_remove[to_remove[:,0].argsort()]
             input_centers.append(to_keep)
             removed_centers.append(to_remove)
         return np.array(input_centers, dtype=np.float32), np.array(removed_centers, dtype=np.float32)
