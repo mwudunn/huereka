@@ -9,6 +9,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from color_pick_shader import *
+import types
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -615,6 +616,7 @@ class Ui_MainWindow(object):
         self.stampnextButton.setText("")
         self.stampnextButton.setIconSize(QtCore.QSize(80, 50))
         self.stampnextButton.setObjectName("stampnextButton")
+        
         self.horizontalLayout_2.addWidget(self.stampnextButton)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem1)

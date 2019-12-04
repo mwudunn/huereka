@@ -8,11 +8,14 @@ from MainWindow import Ui_MainWindow
 import os
 import random
 import types
+import cv2
 
 import sys 
 sys.path.append("../../clustering")
 from MoodboardColorPicker import *
 from color_pick_shader import *
+
+from nnInterface import *
 
 BRUSH_MULT = 3
 SPRAY_PAINT_MULT = 5
@@ -825,7 +828,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Menu options
         self.actionNewImage.triggered.connect(self.canvas.initialize)
         self.actionOpenImage.triggered.connect(self.open_file)
-        self.actionSaveImage.triggered.connect(self.save_file)
+        self.actionSaveImage.triggered.connect(self.open_file_and_predict)
         self.actionClearImage.triggered.connect(self.canvas.reset)
         self.actionInvertColors.triggered.connect(self.invert)
         self.actionFlipHorizontal.triggered.connect(self.flip_horizontal)
@@ -900,7 +903,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         path, _ = QFileDialog.getOpenFileName(self, "Open file", "", "PNG image files (*.png); JPEG image files (*jpg); All files (*.*)")
 
+
         if path:
+
+            # self.stampnextButton.mousePressEvent = types.MethodType(amousePressed, self.stampnextButton)
             pixmap = QPixmap()
             pixmap.load(path)
 
@@ -945,6 +951,68 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 btn.mousePressEvent = types.MethodType(patch_mousePressEvent, btn)
             self.moodboard.setPixmap(pixmap)
+
+            
+    def open_file_and_predict(self):
+        """
+        Open image file for editing, scaling the smaller dimension and cropping the remainder.
+        :return:
+        """
+        path, _ = QFileDialog.getOpenFileName(self, "Open file", "", "PNG image files (*.png); JPEG image files (*jpg); All files (*.*)")
+
+
+        if path:
+            def amousePressed(self_, event):
+                print("Running inference")
+                nn = NNInterface("../../ml/config.yaml", "../checkpoint")
+                img = cv2.imread(path)
+                pred = nn.predict(img)
+                self.set_secondary_color(floatRGB2hex((pred[0]/255, pred[1]/255, pred[2]/255)))
+
+            self.stampnextButton.mousePressEvent = types.MethodType(amousePressed, self.stampnextButton)
+            pixmap = QPixmap()
+            pixmap.load(path)
+
+            # We need to crop down to the size of our canvas. Get the size of the loaded image.
+            iw = pixmap.width()
+            ih = pixmap.height()
+
+            # Get the size of the space we're filling.
+            cw, ch = CANVAS_DIMENSIONS
+
+            if iw/cw < ih/ch:  # The height is relatively bigger than the width.
+                pixmap = pixmap.scaledToWidth(cw)
+                hoff = (pixmap.height() - ch) // 2
+                pixmap = pixmap.copy(
+                    QRect(QPoint(0, hoff), QPoint(cw, pixmap.height()-hoff))
+                )
+
+            elif iw/cw > ih/ch:  # The height is relatively bigger than the width.
+                pixmap = pixmap.scaledToHeight(ch)
+                woff = (pixmap.width() - cw) // 2
+                pixmap = pixmap.copy(
+                    QRect(QPoint(woff, 0), QPoint(pixmap.width()-woff, ch))
+                )
+
+            
+            # Initialize button colours.
+            for n, hex in enumerate([], 1):
+                btn = getattr(self, 'colorButton_%d' % n)
+                btn.setStyleSheet('QPushButton { background-color: %s; }' % hex)
+                btn.hex = hex  # For use in the event below
+
+                def patch_mousePressEvent(self_, e):
+                    if e.button() == Qt.LeftButton:
+                        self.colorToMix = (self_.hex)
+                        self.set_primary_color(self_.hex)
+
+                    elif e.button() == Qt.RightButton:
+                        #self.set_secondary_color(self_.hex)
+                        pass
+
+                btn.mousePressEvent = types.MethodType(patch_mousePressEvent, btn)
+            self.canvas.setPixmap(pixmap)
+
 
            
 

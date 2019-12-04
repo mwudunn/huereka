@@ -9,14 +9,9 @@ import cv2
 NUM_CHANNELS = 3
 class NNInterface:
     def __init__(self, config, checkpoint):
-<<<<<<< HEAD
         self.sess = tf.Session()
         with open(config) as f:
             config = yaml.load(f)
-=======
-        with open(config) as f:
-            config = yaml.load(f, Loader=yaml.CLoader)
->>>>>>> e6fb7279acfd4b4ec46c83802bd07a7cd1d7aa16
         self.img_size = config['data_params']['img_size']
         self.imagePH = tf.compat.v1.placeholder(tf.float32, (config['data_params']['batch_size'],
             config['data_params']['img_size'], config['data_params']['img_size'], NUM_CHANNELS))
@@ -38,7 +33,7 @@ class NNInterface:
         return [int(x * 255) for x in color]
 
 
-nn = NNInterface("../../ml/config.yaml", "../checkpoint")
-img = cv2.imread("input/removed_color.png")
-pred = nn.predict(img)
-print(pred)
+# nn = NNInterface("../../ml/config.yaml", "../checkpoint")
+# img = cv2.imread("input/removed_color.png")
+# 
+# print(pred)
