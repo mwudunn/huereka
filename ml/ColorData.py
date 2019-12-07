@@ -92,7 +92,7 @@ class ColorData:
         repeat_amount = int(num_epochs * num_clusters / batch_size)
         
         data_test = dataset.take(test_size)
-        dataset = data_test.shuffle(10 * batch_size)
+        data_test = data_test.shuffle(10 * batch_size)
         data_test = data_test.repeat(repeat_amount).batch(batch_size)
         data_train = dataset.skip(test_size)
         data_train = data_train.shuffle(10 * batch_size)

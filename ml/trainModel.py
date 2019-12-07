@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 import yaml
+import os
 
 import ColorModel
 import ColorData
@@ -16,7 +17,28 @@ def main():
     parser = argparse.ArgumentParser(description='Train Huereka Model')
     parser.add_argument('--config', type=str, default='config.yaml')
     parser.add_argument('--checkpoint', type=str, default='checkpoint')
+    parser.add_argument('--use_gpu', '-gpu', action='store_true')
+
     args = parser.parse_args()
+
+    if args.use_gpu:
+        gpu_frac=0.6
+        allow_gpu_growth=True
+        which_gpu = 0
+        gpu_options = tf.GPUOptions(
+            per_process_gpu_memory_fraction=gpu_frac,
+            allow_growth=allow_gpu_growth)
+        # TF config
+        config = tf.ConfigProto(
+            gpu_options=gpu_options,
+            log_device_placement=False,
+            allow_soft_placement=True,
+            inter_op_parallelism_threads=1,
+            intra_op_parallelism_threads=1)
+        # set env variable to specify which gpu to use
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(which_gpu)
+        sess = tf.Session(config=config)
+        tf.global_variables_initializer().run(session=sess)
 
     with open(args.config) as f:
         config = yaml.load(f, Loader=yaml.CLoader)

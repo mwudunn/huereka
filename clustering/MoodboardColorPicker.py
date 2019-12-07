@@ -41,7 +41,7 @@ def compute_exp_dist_matrix(points):
     exp_dist = np.exp(dist_matrix) - 1.0
     return exp_dist
 
-def get_sampled_colors(ims, samples_per_image=1000):
+def get_sampled_colors(ims, samples_per_image=300):
     sampled_colors = []
 
     for im in ims:
@@ -64,7 +64,7 @@ def get_cluster_centers(colors, labels, n_clusters):
     return centers
 
 def cluster_colors(colors, n_clusters):
-    dist_matrix = compute_exp_dist_matrix(colors)
+    dist_matrix = compute_squared_dist_matrix(colors)
 
     clustering = AgglomerativeClustering(n_clusters=n_clusters, affinity="precomputed", linkage='average')
     

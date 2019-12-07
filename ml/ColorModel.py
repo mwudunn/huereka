@@ -88,12 +88,24 @@ class ClusterSuggestModel:
             for dense_size in self.model_params["dense_size"]:
                 x = tf.layers.dense(x, dense_size, activation=tf.nn.relu)
             x = tf.layers.dense(x, self.model_params['num_colors'] * 3)
-        x = tf.reshape(x, (-1, self.model_params['num_colors'], 3))
-        return x
+        out = tf.reshape(x, (-1, self.model_params['num_colors'], 3))
+
+        out = tf.sigmoid(out)
+        return out
 
     def define_train_op(self, model, labels):
         global_step = tf.compat.v1.train.get_or_create_global_step()
 
-        learning_rate = self.training_params['lr']
+        lr = self.training_params['lr']
         self.loss = tf.reduce_mean(tf.square(model - labels))
-        self.train_op = tf.compat.v1.train.AdamOptimizer(learning_rate).minimize(self.loss, global_step=global_step)
+        decay = float(self.training_params['weight_decay'])
+        optimizer = tf.contrib.opt.AdamWOptimizer(decay, lr)
+        self.train_op = optimizer.minimize(self.loss, global_step=global_step)
+
+    def get_deltae_loss(self, model, labels):
+        xyz1 = ColorOps.sRGB_to_XYZ(model)
+        lab1 = ColorOps.XYZ_to_LAB(xyz1)
+        xyz2 = ColorOps.sRGB_to_XYZ(labels)
+        lab2 = ColorOps.XYZ_to_LAB(xyz2)
+        deltaE = ColorOps.deltaE_2000(lab1, lab2)
+        self.deltaE = tf.reduce_mean(deltaE)

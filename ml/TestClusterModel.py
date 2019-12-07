@@ -64,7 +64,7 @@ def main():
 
     model_out = model.build_model(clusterPH)
     opt = model.define_train_op(model_out, labelsPH)
-    
+    deltaE = model.get_deltae_loss(model_out, labelsPH)
     # loop
     with tf.Session() as sess:
         saver = tf.compat.v1.train.Saver()
@@ -75,9 +75,13 @@ def main():
                 batch = sess.run(data_test)
                 input_centers, removed_centers = color_data.remove_clusters(batch)
                 feed_dict = { clusterPH: input_centers, labelsPH: removed_centers}
-                clusters_out, loss = sess.run([model_out, model.loss], feed_dict=feed_dict)
+                clusters_out, loss, deltaE = sess.run([model_out, model.loss, model.deltaE], feed_dict=feed_dict)
 
                 print(loss)
+                print(deltaE)
+
+
+
 
                 display_clusters(batch, input_centers, clusters_out, removed_centers)
 

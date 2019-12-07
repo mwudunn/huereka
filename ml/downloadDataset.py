@@ -3,7 +3,7 @@ import sqlite3
 import pandas as pd
 import os
 
-database = '../../Huereka/bam.sqlite'
+database = 'bam.sqlite'
 style = 'media_oilpaint'
 location = './' + style + '/'
 
